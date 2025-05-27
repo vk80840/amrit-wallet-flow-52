@@ -1,10 +1,253 @@
 
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
+
 const WalletTab = () => {
+  const { user } = useAuth();
+  const [activeAction, setActiveAction] = useState<string | null>(null);
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferUserId, setTransferUserId] = useState('');
+  const [topupAmount, setTopupAmount] = useState('');
+  const [verifiedUser, setVerifiedUser] = useState<string | null>(null);
+
+  // Mock balances - will be from database
+  const mainBalance = 12345;
+  const topupBalance = 8250;
+
+  const handleVerifyUser = () => {
+    // Mock verification - will connect to database
+    if (transferUserId) {
+      setVerifiedUser('John Doe'); // Mock verified user name
+      toast({
+        title: "User Verified",
+        description: `User ID ${transferUserId} belongs to John Doe`,
+      });
+    }
+  };
+
+  const handleTransfer = () => {
+    const amount = parseFloat(transferAmount);
+    if (amount < 100) {
+      toast({
+        title: "Error",
+        description: "Minimum transfer amount is ₹100",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Calculate charges: 6% + 2% TDS
+    const charges = amount * 0.08;
+    const finalAmount = amount + charges;
+    
+    toast({
+      title: "Transfer Initiated",
+      description: `₹${amount} + ₹${charges.toFixed(2)} charges = ₹${finalAmount.toFixed(2)} total`,
+    });
+    
+    setActiveAction(null);
+    setTransferAmount('');
+    setTransferUserId('');
+    setVerifiedUser(null);
+  };
+
+  const handleTopup = () => {
+    const amount = parseFloat(topupAmount);
+    if (amount < 100) {
+      toast({
+        title: "Error",
+        description: "Minimum top-up amount is ₹100",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({
+      title: "Top-up Successful",
+      description: `₹${amount} transferred to top-up balance`,
+    });
+    
+    setActiveAction(null);
+    setTopupAmount('');
+  };
+
+  const transactions = [
+    { id: 1, type: 'Deposit', amount: 5000, status: 'Completed', date: '2024-01-15' },
+    { id: 2, type: 'Withdraw', amount: -2000, status: 'Pending', date: '2024-01-14' },
+    { id: 3, type: 'Transfer', amount: -500, status: 'Completed', date: '2024-01-13' },
+  ];
+
   return (
-    <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Wallet</h2>
-      <div className="text-center py-12">
-        <p className="text-gray-600">Wallet functionality will be implemented here.</p>
+    <div className="space-y-6">
+      {/* Balance Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl">
+          <div className="flex items-center justify-between mb-4">
+            <Wallet className="w-8 h-8" />
+            <span className="text-blue-100 text-sm">Withdrawable</span>
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Main Balance</h3>
+          <p className="text-3xl font-bold">₹{mainBalance.toLocaleString()}</p>
+        </div>
+        
+        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl">
+          <div className="flex items-center justify-between mb-4">
+            <Wallet className="w-8 h-8" />
+            <span className="text-green-100 text-sm">Shopping</span>
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Top-up Balance</h3>
+          <p className="text-3xl font-bold">₹{topupBalance.toLocaleString()}</p>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Button 
+            onClick={() => setActiveAction('deposit')}
+            className="bg-blue-500 hover:bg-blue-600 text-white p-4 h-auto flex-col space-y-2"
+          >
+            <ArrowDownLeft className="w-6 h-6" />
+            <span>Deposit</span>
+          </Button>
+          
+          <Button 
+            onClick={() => setActiveAction('withdraw')}
+            className="bg-red-500 hover:bg-red-600 text-white p-4 h-auto flex-col space-y-2"
+          >
+            <ArrowUpRight className="w-6 h-6" />
+            <span>Withdraw</span>
+          </Button>
+          
+          <Button 
+            onClick={() => setActiveAction('topup')}
+            className="bg-green-500 hover:bg-green-600 text-white p-4 h-auto flex-col space-y-2"
+          >
+            <RefreshCw className="w-6 h-6" />
+            <span>Top-up</span>
+          </Button>
+          
+          <Button 
+            onClick={() => setActiveAction('transfer')}
+            className="bg-purple-500 hover:bg-purple-600 text-white p-4 h-auto flex-col space-y-2"
+          >
+            <Users className="w-6 h-6" />
+            <span>Transfer</span>
+          </Button>
+        </div>
+
+        {/* Transfer Form */}
+        {activeAction === 'transfer' && (
+          <div className="border-t pt-4 space-y-4">
+            <h4 className="font-semibold">User to User Transfer</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="userId">User ID</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="userId"
+                    value={transferUserId}
+                    onChange={(e) => setTransferUserId(e.target.value)}
+                    placeholder="Enter User ID"
+                  />
+                  <Button onClick={handleVerifyUser} variant="outline">
+                    Verify
+                  </Button>
+                </div>
+                {verifiedUser && (
+                  <p className="text-green-600 text-sm mt-1">✓ {verifiedUser}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="amount">Amount</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  placeholder="Enter amount"
+                />
+                <p className="text-xs text-gray-500 mt-1">Charges: 6% + 2% TDS</p>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Button onClick={handleTransfer} disabled={!verifiedUser}>
+                Transfer
+              </Button>
+              <Button onClick={() => setActiveAction(null)} variant="outline">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Top-up Form */}
+        {activeAction === 'topup' && (
+          <div className="border-t pt-4 space-y-4">
+            <h4 className="font-semibold">Transfer to Top-up Balance</h4>
+            <div>
+              <Label htmlFor="topupAmount">Amount</Label>
+              <Input
+                id="topupAmount"
+                type="number"
+                value={topupAmount}
+                onChange={(e) => setTopupAmount(e.target.value)}
+                placeholder="Enter amount to transfer"
+              />
+            </div>
+            <div className="flex space-x-2">
+              <Button onClick={handleTopup}>
+                Transfer
+              </Button>
+              <Button onClick={() => setActiveAction(null)} variant="outline">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Transaction History */}
+      <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Transaction History</h3>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left p-2">Type</th>
+                <th className="text-left p-2">Amount</th>
+                <th className="text-left p-2">Status</th>
+                <th className="text-left p-2">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((tx) => (
+                <tr key={tx.id} className="border-b">
+                  <td className="p-2">{tx.type}</td>
+                  <td className={`p-2 ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    ₹{Math.abs(tx.amount).toLocaleString()}
+                  </td>
+                  <td className="p-2">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      tx.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {tx.status}
+                    </span>
+                  </td>
+                  <td className="p-2">{tx.date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
