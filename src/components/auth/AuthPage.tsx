@@ -7,10 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
+import { ArrowLeft } from 'lucide-react';
 
 const AuthPage = () => {
   const { login, register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<'email' | 'otp' | 'password'>('email');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const [loginData, setLoginData] = useState({
     email: '',
@@ -91,6 +98,74 @@ const AuthPage = () => {
     }
   };
 
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      if (forgotPasswordStep === 'email') {
+        // Mock API call to send OTP
+        setTimeout(() => {
+          toast({
+            title: "OTP Sent",
+            description: "Please check your email for the OTP.",
+          });
+          setForgotPasswordStep('otp');
+          setIsLoading(false);
+        }, 1000);
+      } else if (forgotPasswordStep === 'otp') {
+        // Mock OTP verification
+        if (otp === '123456') {
+          setForgotPasswordStep('password');
+          toast({
+            title: "OTP Verified",
+            description: "Please set your new password.",
+          });
+        } else {
+          toast({
+            title: "Invalid OTP",
+            description: "Please enter the correct OTP.",
+            variant: "destructive",
+          });
+        }
+        setIsLoading(false);
+      } else if (forgotPasswordStep === 'password') {
+        if (newPassword !== confirmPassword) {
+          toast({
+            title: "Password Mismatch",
+            description: "Passwords do not match.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        // Mock password reset
+        setTimeout(() => {
+          toast({
+            title: "Password Reset Successful",
+            description: "Your password has been reset. Please login with your new password.",
+          });
+          // Reset all states and go back to login
+          setShowForgotPassword(false);
+          setForgotPasswordStep('email');
+          setForgotEmail('');
+          setOtp('');
+          setNewPassword('');
+          setConfirmPassword('');
+          setIsLoading(false);
+        }, 1000);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+
   const handleReferralCodeChange = (code: string) => {
     setSignupData(prev => ({ ...prev, referralCode: code }));
     
@@ -103,6 +178,112 @@ const AuthPage = () => {
       setSignupData(prev => ({ ...prev, sponsorName: '' }));
     }
   };
+
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-between mb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowForgotPassword(false)}
+                className="p-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                AA
+              </div>
+              <div className="w-8"></div>
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-800">Forgot Password</CardTitle>
+            <p className="text-gray-600">
+              {forgotPasswordStep === 'email' && 'Enter your email to receive OTP'}
+              {forgotPasswordStep === 'otp' && 'Enter the OTP sent to your email'}
+              {forgotPasswordStep === 'password' && 'Set your new password'}
+            </p>
+          </CardHeader>
+          
+          <CardContent>
+            <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+              {forgotPasswordStep === 'email' && (
+                <div>
+                  <Label htmlFor="forgotEmail">Email</Label>
+                  <Input
+                    id="forgotEmail"
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
+              )}
+              
+              {forgotPasswordStep === 'otp' && (
+                <div>
+                  <Label htmlFor="otp">OTP</Label>
+                  <Input
+                    id="otp"
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="Enter 6-digit OTP"
+                    maxLength={6}
+                    required
+                  />
+                  <p className="text-sm text-gray-600 mt-1">
+                    OTP sent to {forgotEmail}
+                  </p>
+                </div>
+              )}
+              
+              {forgotPasswordStep === 'password' && (
+                <>
+                  <div>
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+                    <Input
+                      id="confirmNewPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Processing...' : 
+                 forgotPasswordStep === 'email' ? 'Send OTP' :
+                 forgotPasswordStep === 'otp' ? 'Verify OTP' :
+                 'Reset Password'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -148,15 +329,25 @@ const AuthPage = () => {
                   />
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="rememberMe"
-                    checked={loginData.rememberMe}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, rememberMe: e.target.checked }))}
-                    className="rounded"
-                  />
-                  <Label htmlFor="rememberMe" className="text-sm">Remember Me</Label>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      checked={loginData.rememberMe}
+                      onChange={(e) => setLoginData(prev => ({ ...prev, rememberMe: e.target.checked }))}
+                      className="rounded"
+                    />
+                    <Label htmlFor="rememberMe" className="text-sm">Remember Me</Label>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Forgot Password?
+                  </button>
                 </div>
                 
                 <Button 

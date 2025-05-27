@@ -1,9 +1,7 @@
 
-import { useState } from 'react';
+import { Menu, Bell, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Bell, Menu, User } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useState, useEffect, useRef } from 'react';
 
 interface UserHeaderProps {
   sidebarOpen: boolean;
@@ -11,124 +9,103 @@ interface UserHeaderProps {
 }
 
 const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
-  const { user, logout } = useAuth();
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [notificationOpen, setNotificationOpen] = useState(false);
+  const { user } = useAuth();
+  const [showPopup, setShowPopup] = useState(false);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
-  };
+  useEffect(() => {
+    if (showPopup) {
+      // Auto close after 5 seconds
+      timeoutRef.current = setTimeout(() => {
+        setShowPopup(false);
+      }, 5000);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [showPopup]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        setShowPopup(false);
+      }
+    };
+
+    if (showPopup) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPopup]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-white/20 shadow-sm">
-      <div className="flex items-center justify-between px-4 h-16">
-        {/* Left Section */}
+    <header className="fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-lg border-b border-white/20 shadow-sm z-40">
+      <div className="flex items-center justify-between h-full px-4 lg:px-6">
         <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden"
+            className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
           >
-            <Menu className="h-5 w-5" />
-          </Button>
+            <Menu className="w-5 h-5" />
+          </button>
           
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white font-bold">
-              AA
-            </div>
-            <span className="text-xl font-bold text-gray-800 hidden sm:block">
-              AlkalineAmrit
-            </span>
+          <div className="hidden lg:block">
+            <h1 className="text-xl font-bold text-gray-800">AlkalineAmrit</h1>
           </div>
         </div>
-
-        {/* Right Section */}
+        
         <div className="flex items-center space-x-4">
-          {/* Notifications */}
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setNotificationOpen(!notificationOpen)}
-              className="relative"
+          <div className="relative" ref={popupRef}>
+            <button 
+              onClick={() => setShowPopup(!showPopup)}
+              className="p-2 rounded-lg hover:bg-gray-100 relative"
             >
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                3
-              </span>
-            </Button>
+              <Bell className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs"></span>
+            </button>
             
-            {notificationOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white/90 backdrop-blur-lg rounded-lg shadow-lg border border-white/20 z-50">
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-800 mb-3">Notifications</h3>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-gray-700">Welcome to AlkalineAmrit!</p>
-                      <span className="text-xs text-gray-500">2 hours ago</span>
-                    </div>
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <p className="text-sm text-gray-700">KYC verification pending</p>
-                      <span className="text-xs text-gray-500">1 day ago</span>
-                    </div>
-                    <div className="p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-sm text-gray-700">New product available in shop</p>
-                      <span className="text-xs text-gray-500">2 days ago</span>
-                    </div>
+            {/* Auto-closing popup menu */}
+            {showPopup && (
+              <div className="absolute right-0 top-12 w-80 bg-white rounded-lg shadow-xl border z-50 max-h-96 overflow-y-auto">
+                <div className="p-4 border-b">
+                  <h3 className="font-semibold text-gray-800">Notifications</h3>
+                </div>
+                <div className="p-2">
+                  <div className="p-3 hover:bg-gray-50 rounded cursor-pointer">
+                    <p className="text-sm font-medium">Welcome to AlkalineAmrit!</p>
+                    <p className="text-xs text-gray-600 mt-1">Your account has been created successfully.</p>
+                    <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
                   </div>
+                  <div className="p-3 hover:bg-gray-50 rounded cursor-pointer">
+                    <p className="text-sm font-medium">KYC Verification Required</p>
+                    <p className="text-xs text-gray-600 mt-1">Please complete your KYC verification to unlock all features.</p>
+                    <p className="text-xs text-gray-400 mt-1">1 day ago</p>
+                  </div>
+                  <div className="p-3 hover:bg-gray-50 rounded cursor-pointer">
+                    <p className="text-sm font-medium">New Product Available</p>
+                    <p className="text-xs text-gray-600 mt-1">Check out our latest alkaline water products in the shop.</p>
+                    <p className="text-xs text-gray-400 mt-1">3 days ago</p>
+                  </div>
+                </div>
+                <div className="p-3 border-t text-center">
+                  <button className="text-sm text-blue-600 hover:text-blue-800">View All Notifications</button>
                 </div>
               </div>
             )}
           </div>
-
-          {/* Profile Dropdown */}
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="relative"
-            >
-              {user?.profilePicture ? (
-                <img 
-                  src={user.profilePicture} 
-                  alt="Profile" 
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-              ) : (
-                <User className="h-5 w-5" />
-              )}
-            </Button>
-            
-            {profileDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-lg rounded-lg shadow-lg border border-white/20 z-50">
-                <div className="p-2">
-                  <button 
-                    className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 transition-colors"
-                    onClick={() => setProfileDropdownOpen(false)}
-                  >
-                    Profile
-                  </button>
-                  <button 
-                    className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 transition-colors"
-                    onClick={() => setNotificationOpen(true)}
-                  >
-                    Notifications
-                  </button>
-                  <button 
-                    className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 transition-colors text-red-600"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
-            )}
+          
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+              {user?.name?.charAt(0)}
+            </div>
+            <span className="hidden sm:block text-sm font-medium text-gray-700">{user?.name}</span>
           </div>
         </div>
       </div>
