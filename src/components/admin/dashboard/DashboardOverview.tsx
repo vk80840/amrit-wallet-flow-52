@@ -1,168 +1,172 @@
 
-import { Users, DollarSign, FileCheck, Download, UserCheck, UserPlus, ShoppingCart, Coins } from 'lucide-react';
+import { useState } from 'react';
+import { Users, DollarSign, FileText, Download, UserCheck, UserPlus, ShoppingCart, Coins, Bell, TrendingUp, Activity } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const DashboardOverview = () => {
+  const [dateRange, setDateRange] = useState('today');
+
   // Mock data - will be from database
   const stats = {
-    totalUsers: 1234,
-    totalEarnings: 567890,
+    totalUsers: 15847,
+    totalEarnings: 2847650,
     pendingKYC: 23,
-    pendingWithdrawals: 12,
-    activeUsersToday: 156,
-    newSignupsToday: 8,
-    totalOrders: 456,
-    totalSTKBalance: 850000 // 850K out of 1M total supply
+    pendingWithdrawals: 7,
+    activeUsersToday: 1247,
+    newSignupsToday: 45,
+    totalOrders: 3892,
+    totalSTKBalance: 875000,
+    adminSTKBalance: 125000
   };
 
-  const recentActivities = [
-    { id: 1, user: 'John Doe', action: 'KYC Submitted', time: '2 mins ago', type: 'kyc' },
-    { id: 2, user: 'Jane Smith', action: 'Withdrawal Request', time: '5 mins ago', type: 'withdrawal' },
-    { id: 3, user: 'Bob Wilson', action: 'New Registration', time: '10 mins ago', type: 'registration' },
-    { id: 4, user: 'Alice Brown', action: 'Product Purchase', time: '15 mins ago', type: 'purchase' },
+  const recentActivity = [
+    { id: 1, action: 'New user registration', user: 'John Doe (GB00015)', time: '2 minutes ago' },
+    { id: 2, action: 'KYC submitted', user: 'Jane Smith (GB00016)', time: '5 minutes ago' },
+    { id: 3, action: 'Withdrawal request', user: 'Bob Wilson (GB00017)', time: '8 minutes ago' },
+    { id: 4, action: 'Order placed', user: 'Alice Brown (GB00018)', time: '12 minutes ago' },
+    { id: 5, action: 'STK purchase', user: 'Charlie Davis (GB00019)', time: '15 minutes ago' }
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-        <div className="text-sm text-gray-600">
-          Last updated: {new Date().toLocaleString()}
+        <h1 className="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+        <div className="flex space-x-2">
+          {['today', 'week', 'month'].map((range) => (
+            <Button
+              key={range}
+              variant={dateRange === range ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setDateRange(range)}
+            >
+              {range.charAt(0).toUpperCase() + range.slice(1)}
+            </Button>
+          ))}
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl">
-          <div className="flex items-center space-x-3">
-            <Users className="w-8 h-8" />
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">Total Users</h3>
+              <p className="text-blue-100">Total Users</p>
               <p className="text-3xl font-bold">{stats.totalUsers.toLocaleString()}</p>
             </div>
+            <Users className="w-8 h-8 text-blue-200" />
           </div>
         </div>
-        
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl">
-          <div className="flex items-center space-x-3">
-            <DollarSign className="w-8 h-8" />
+
+        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">Total Earnings</h3>
+              <p className="text-green-100">Total Earnings</p>
               <p className="text-3xl font-bold">₹{stats.totalEarnings.toLocaleString()}</p>
             </div>
+            <DollarSign className="w-8 h-8 text-green-200" />
           </div>
         </div>
-        
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-xl">
-          <div className="flex items-center space-x-3">
-            <FileCheck className="w-8 h-8" />
+
+        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-xl p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">Pending KYC</h3>
+              <p className="text-yellow-100">Pending KYC</p>
               <p className="text-3xl font-bold">{stats.pendingKYC}</p>
             </div>
+            <FileText className="w-8 h-8 text-yellow-200" />
           </div>
         </div>
-        
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl">
-          <div className="flex items-center space-x-3">
-            <Download className="w-8 h-8" />
+
+        <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">Pending Withdrawals</h3>
+              <p className="text-red-100">Pending Withdrawals</p>
               <p className="text-3xl font-bold">{stats.pendingWithdrawals}</p>
             </div>
+            <Download className="w-8 h-8 text-red-200" />
           </div>
         </div>
-        
-        <div className="bg-gradient-to-br from-teal-500 to-teal-600 text-white p-6 rounded-xl">
-          <div className="flex items-center space-x-3">
-            <UserCheck className="w-8 h-8" />
+
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">Active Users Today</h3>
-              <p className="text-3xl font-bold">{stats.activeUsersToday}</p>
+              <p className="text-purple-100">Active Users Today</p>
+              <p className="text-3xl font-bold">{stats.activeUsersToday.toLocaleString()}</p>
             </div>
+            <UserCheck className="w-8 h-8 text-purple-200" />
           </div>
         </div>
-        
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-6 rounded-xl">
-          <div className="flex items-center space-x-3">
-            <UserPlus className="w-8 h-8" />
+
+        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl p-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">New Signups Today</h3>
+              <p className="text-indigo-100">New Signups Today</p>
               <p className="text-3xl font-bold">{stats.newSignupsToday}</p>
             </div>
+            <UserPlus className="w-8 h-8 text-indigo-200" />
           </div>
         </div>
-        
-        <div className="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-6 rounded-xl">
-          <div className="flex items-center space-x-3">
-            <ShoppingCart className="w-8 h-8" />
-            <div>
-              <h3 className="text-lg font-semibold">Total Orders</h3>
-              <p className="text-3xl font-bold">{stats.totalOrders}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6 rounded-xl">
-          <div className="flex items-center space-x-3">
-            <Coins className="w-8 h-8" />
-            <div>
-              <h3 className="text-lg font-semibold">Total STK Balance</h3>
-              <p className="text-2xl font-bold">{stats.totalSTKBalance.toLocaleString()}</p>
-              <p className="text-sm text-yellow-100">Distributed: {((1000000 - stats.totalSTKBalance) / 1000000 * 100).toFixed(1)}%</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Recent Activities */}
-      <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Activities</h2>
-        
-        <div className="space-y-3">
-          {recentActivities.map((activity) => (
-            <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className={`w-3 h-3 rounded-full ${
-                  activity.type === 'kyc' ? 'bg-orange-500' :
-                  activity.type === 'withdrawal' ? 'bg-red-500' :
-                  activity.type === 'registration' ? 'bg-green-500' :
-                  'bg-blue-500'
-                }`}></div>
-                <div>
-                  <p className="font-medium text-gray-800">{activity.user}</p>
-                  <p className="text-sm text-gray-600">{activity.action}</p>
-                </div>
-              </div>
-              <span className="text-sm text-gray-500">{activity.time}</span>
+        <div className="bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-pink-100">Total Orders</p>
+              <p className="text-3xl font-bold">{stats.totalOrders.toLocaleString()}</p>
             </div>
-          ))}
+            <ShoppingCart className="w-8 h-8 text-pink-200" />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-orange-100">Total STK Distributed</p>
+              <p className="text-3xl font-bold">{stats.totalSTKBalance.toLocaleString()}</p>
+            </div>
+            <Coins className="w-8 h-8 text-orange-200" />
+          </div>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
-        
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-            <Users className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-            <p className="text-sm font-medium text-blue-600">Manage Users</p>
-          </button>
-          
-          <button className="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
-            <FileCheck className="w-6 h-6 text-orange-600 mx-auto mb-2" />
-            <p className="text-sm font-medium text-orange-600">Review KYC</p>
-          </button>
-          
-          <button className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-            <Download className="w-6 h-6 text-green-600 mx-auto mb-2" />
-            <p className="text-sm font-medium text-green-600">Process Withdrawals</p>
-          </button>
-          
-          <button className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-            <Bell className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-            <p className="text-sm font-medium text-purple-600">Send Announcement</p>
-          </button>
+          <Button className="p-4 h-auto flex-col space-y-2">
+            <Users className="w-6 h-6" />
+            <span>Add User</span>
+          </Button>
+          <Button className="p-4 h-auto flex-col space-y-2" variant="outline">
+            <FileText className="w-6 h-6" />
+            <span>Review KYC</span>
+          </Button>
+          <Button className="p-4 h-auto flex-col space-y-2" variant="outline">
+            <Download className="w-6 h-6" />
+            <span>Process Withdrawals</span>
+          </Button>
+          <Button className="p-4 h-auto flex-col space-y-2" variant="outline">
+            <Bell className="w-6 h-6" />
+            <span>Send Announcement</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
+        <div className="space-y-3">
+          {recentActivity.map((activity) => (
+            <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Activity className="w-5 h-5 text-gray-500" />
+                <div>
+                  <p className="font-medium text-gray-800">{activity.action}</p>
+                  <p className="text-sm text-gray-600">{activity.user}</p>
+                </div>
+              </div>
+              <span className="text-xs text-gray-500">{activity.time}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
