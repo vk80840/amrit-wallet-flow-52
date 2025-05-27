@@ -1,5 +1,5 @@
 
-import { Menu, Bell, User } from 'lucide-react';
+import { Menu, Bell, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useState, useEffect, useRef } from 'react';
 
@@ -9,41 +9,58 @@ interface UserHeaderProps {
 }
 
 const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
-  const { user } = useAuth();
-  const [showPopup, setShowPopup] = useState(false);
-  const popupRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const { user, logout } = useAuth();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const notificationTimeoutRef = useRef<NodeJS.Timeout>();
+  const profileTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    if (showPopup) {
-      // Auto close after 5 seconds
-      timeoutRef.current = setTimeout(() => {
-        setShowPopup(false);
+    if (showNotifications) {
+      notificationTimeoutRef.current = setTimeout(() => {
+        setShowNotifications(false);
       }, 5000);
     }
-
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
       }
     };
-  }, [showPopup]);
+  }, [showNotifications]);
+
+  useEffect(() => {
+    if (showProfileMenu) {
+      profileTimeoutRef.current = setTimeout(() => {
+        setShowProfileMenu(false);
+      }, 5000);
+    }
+    return () => {
+      if (profileTimeoutRef.current) {
+        clearTimeout(profileTimeoutRef.current);
+      }
+    };
+  }, [showProfileMenu]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
-        setShowPopup(false);
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
       }
     };
 
-    if (showPopup) {
+    if (showNotifications || showProfileMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showPopup]);
+  }, [showNotifications, showProfileMenu]);
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-lg border-b border-white/20 shadow-sm z-40">
@@ -62,17 +79,17 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <div className="relative" ref={popupRef}>
+          {/* Notifications */}
+          <div className="relative" ref={notificationRef}>
             <button 
-              onClick={() => setShowPopup(!showPopup)}
+              onClick={() => setShowNotifications(!showNotifications)}
               className="p-2 rounded-lg hover:bg-gray-100 relative"
             >
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs"></span>
             </button>
             
-            {/* Auto-closing popup menu */}
-            {showPopup && (
+            {showNotifications && (
               <div className="absolute right-0 top-12 w-80 bg-white rounded-lg shadow-xl border z-50 max-h-96 overflow-y-auto">
                 <div className="p-4 border-b">
                   <h3 className="font-semibold text-gray-800">Notifications</h3>
@@ -101,11 +118,40 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
             )}
           </div>
           
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-              {user?.name?.charAt(0)}
-            </div>
-            <span className="hidden sm:block text-sm font-medium text-gray-700">{user?.name}</span>
+          {/* Profile Menu */}
+          <div className="relative" ref={profileRef}>
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100"
+            >
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                {user?.name?.charAt(0)}
+              </div>
+              <span className="hidden sm:block text-sm font-medium text-gray-700">{user?.name}</span>
+            </button>
+
+            {showProfileMenu && (
+              <div className="absolute right-0 top-12 w-48 bg-white rounded-lg shadow-xl border z-50">
+                <div className="p-2">
+                  <button className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-lg">
+                    <User className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-700">Profile</span>
+                  </button>
+                  <button className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-lg">
+                    <Settings className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-700">Settings</span>
+                  </button>
+                  <hr className="my-1" />
+                  <button 
+                    onClick={logout}
+                    className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-red-50 rounded-lg text-red-600"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="text-sm">Logout</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
