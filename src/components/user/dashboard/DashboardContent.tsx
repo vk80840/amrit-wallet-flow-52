@@ -1,27 +1,68 @@
 
 import { useAuth } from '@/hooks/useAuth';
-import { User, Mail, Phone, IdCard, Copy, Star } from 'lucide-react';
+import { User, Mail, Phone, IdCard, Copy, Star, Calendar, TrendingUp, Users, ShoppingBag, DollarSign, Award } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 const DashboardContent = () => {
   const { user } = useAuth();
+  const [currentRankIndex, setCurrentRankIndex] = useState(0);
 
   const stats = [
-    { label: 'Purchased Amount', value: '₹25,000', color: 'from-blue-500 to-blue-600' },
-    { label: 'Referral Bonus', value: '₹3,750', color: 'from-green-500 to-green-600' },
-    { label: 'Total Team', value: '156', color: 'from-purple-500 to-purple-600' },
-    { label: 'Direct Team', value: '24', color: 'from-orange-500 to-orange-600' },
-    { label: 'Salary', value: '₹625', color: 'from-pink-500 to-pink-600' },
-    { label: 'Business Volume', value: '5,000 BV', color: 'from-indigo-500 to-indigo-600' },
+    { 
+      label: 'Purchased Amount', 
+      value: '₹25,000', 
+      color: 'from-blue-500 to-blue-600',
+      icon: ShoppingBag
+    },
+    { 
+      label: 'Referral Bonus', 
+      value: '₹3,750', 
+      color: 'from-green-500 to-green-600',
+      icon: DollarSign
+    },
+    { 
+      label: 'Total Team', 
+      value: '156', 
+      color: 'from-purple-500 to-purple-600',
+      icon: Users
+    },
+    { 
+      label: 'Direct Team', 
+      value: '24', 
+      color: 'from-orange-500 to-orange-600',
+      icon: TrendingUp
+    },
+    { 
+      label: 'Salary', 
+      value: '₹625', 
+      color: 'from-pink-500 to-pink-600',
+      icon: Award
+    },
+    { 
+      label: 'Business Volume', 
+      value: '5,000 BV', 
+      color: 'from-indigo-500 to-indigo-600',
+      icon: TrendingUp
+    },
   ];
 
   const ranks = [
-    { name: 'Wood', required: '0 BV', current: true },
-    { name: 'Silver', required: '1,000 BV', current: false },
-    { name: 'Gold', required: '5,000 BV', current: false },
-    { name: 'Platinum', required: '15,000 BV', current: false },
-    { name: 'Diamond', required: '50,000 BV', current: false },
-    { name: 'Ruby', required: '100,000 BV', current: false },
+    { name: 'Wood', required: '0 BV', current: true, image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=100&h=100&fit=crop' },
+    { name: 'Silver', required: '1,000 BV', current: false, image: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=100&h=100&fit=crop' },
+    { name: 'Gold', required: '5,000 BV', current: false, image: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=100&h=100&fit=crop' },
+    { name: 'Platinum', required: '15,000 BV', current: false, image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=100&h=100&fit=crop' },
+    { name: 'Diamond', required: '50,000 BV', current: false, image: 'https://images.unsplash.com/photo-1482881497185-d4a9ddbe4151?w=100&h=100&fit=crop' },
+    { name: 'Ruby', required: '100,000 BV', current: false, image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=100&h=100&fit=crop' },
   ];
+
+  const nextRank = () => {
+    setCurrentRankIndex((prev) => (prev + 1) % ranks.length);
+  };
+
+  const prevRank = () => {
+    setCurrentRankIndex((prev) => (prev - 1 + ranks.length) % ranks.length);
+  };
 
   return (
     <div className="space-y-6">
@@ -48,8 +89,8 @@ const DashboardContent = () => {
                 <span>ID: {user?.id}</span>
               </div>
               <div className="flex items-center space-x-2">
-                <Star className="w-4 h-4" />
-                <span>Rank: {user?.rank}</span>
+                <Calendar className="w-4 h-4" />
+                <span>Joined: 15 Jan 2024</span>
               </div>
             </div>
           </div>
@@ -81,12 +122,17 @@ const DashboardContent = () => {
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid with Vector Icons */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map((stat, index) => (
           <div key={index} className={`bg-gradient-to-br ${stat.color} text-white p-4 rounded-xl`}>
-            <h4 className="font-medium text-sm opacity-90">{stat.label}</h4>
-            <p className="text-2xl font-bold mt-1">{stat.value}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-sm opacity-90">{stat.label}</h4>
+                <p className="text-2xl font-bold mt-1">{stat.value}</p>
+              </div>
+              <stat.icon className="w-8 h-8 opacity-80" />
+            </div>
           </div>
         ))}
       </div>
@@ -134,31 +180,42 @@ const DashboardContent = () => {
         </div>
       </div>
 
-      {/* Rank Box */}
+      {/* Current Rank Display with Swipeable Navigation */}
       <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Rank Progress</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Current Rank</h3>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {ranks.map((rank, index) => (
-            <div key={index} className={`text-center p-4 rounded-lg border-2 ${
-              rank.current ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-gray-50'
-            }`}>
-              <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-2 ${
-                rank.current ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
-              }`}>
-                <Star className="w-6 h-6" />
-              </div>
-              <h4 className="font-semibold text-sm">{rank.name}</h4>
-              <p className="text-xs text-gray-600 mt-1">{rank.required}</p>
-              {rank.current && (
-                <div className="mt-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full w-3/4"></div>
-                  </div>
-                  <p className="text-xs text-blue-600 mt-1">Current Rank</p>
+        <div className="flex items-center justify-center space-x-4">
+          <Button onClick={prevRank} variant="outline" size="sm">←</Button>
+          
+          <div className="text-center p-6 rounded-lg border-2 border-blue-500 bg-blue-50 min-w-[200px]">
+            <img 
+              src={ranks[currentRankIndex].image} 
+              alt={ranks[currentRankIndex].name}
+              className="w-16 h-16 mx-auto rounded-full object-cover mb-3"
+            />
+            <h4 className="font-semibold text-lg">{ranks[currentRankIndex].name}</h4>
+            <p className="text-sm text-gray-600 mt-1">{ranks[currentRankIndex].required}</p>
+            {ranks[currentRankIndex].current && (
+              <div className="mt-2">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-500 h-2 rounded-full w-3/4"></div>
                 </div>
-              )}
-            </div>
+                <p className="text-xs text-blue-600 mt-1">Current Rank</p>
+              </div>
+            )}
+          </div>
+          
+          <Button onClick={nextRank} variant="outline" size="sm">→</Button>
+        </div>
+        
+        <div className="flex justify-center mt-4 space-x-1">
+          {ranks.map((_, index) => (
+            <div 
+              key={index}
+              className={`w-2 h-2 rounded-full ${
+                index === currentRankIndex ? 'bg-blue-500' : 'bg-gray-300'
+              }`}
+            />
           ))}
         </div>
       </div>

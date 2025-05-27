@@ -1,11 +1,12 @@
 
 import { useState } from 'react';
-import { ZoomIn, ZoomOut, RotateCcw, User, Users } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, User, Users, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const TreeViewTab = () => {
   const [zoomLevel, setZoomLevel] = useState(100);
   const [selectedNode, setSelectedNode] = useState<any>(null);
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['GB00001', 'GB00002', 'GB00003']));
 
   // Mock tree data structure
   const treeData = {
@@ -24,7 +25,10 @@ const TreeViewTab = () => {
             name: 'Alice Brown',
             level: 2,
             side: 'left',
-            children: []
+            children: [
+              { id: 'GB00008', name: 'Tom Wilson', level: 3, side: 'left', children: [] },
+              { id: 'GB00009', name: 'Lisa Garcia', level: 3, side: 'right', children: [] }
+            ]
           },
           {
             id: 'GB00005',
@@ -47,6 +51,13 @@ const TreeViewTab = () => {
             level: 2,
             side: 'left',
             children: []
+          },
+          {
+            id: 'GB00007',
+            name: 'David Miller',
+            level: 2,
+            side: 'right',
+            children: []
           }
         ]
       }
@@ -66,9 +77,21 @@ const TreeViewTab = () => {
     setSelectedNode(null);
   };
 
+  const toggleNodeExpansion = (nodeId: string) => {
+    const newExpanded = new Set(expandedNodes);
+    if (newExpanded.has(nodeId)) {
+      newExpanded.delete(nodeId);
+    } else {
+      newExpanded.add(nodeId);
+    }
+    setExpandedNodes(newExpanded);
+  };
+
   const renderNode = (node: any, depth = 0) => {
     const isRoot = depth === 0;
     const isSelected = selectedNode?.id === node.id;
+    const isExpanded = expandedNodes.has(node.id);
+    const hasChildren = node.children && node.children.length > 0;
 
     return (
       <div key={node.id} className="flex flex-col items-center">
@@ -93,6 +116,20 @@ const TreeViewTab = () => {
                 <p className="text-xs font-medium text-blue-600">Level {node.level}</p>
               )}
             </div>
+            
+            {hasChildren && (
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleNodeExpansion(node.id);
+                }}
+                size="sm"
+                variant="outline"
+                className="w-6 h-6 p-0"
+              >
+                {isExpanded ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+              </Button>
+            )}
           </div>
           
           {/* Connection lines */}
@@ -102,7 +139,7 @@ const TreeViewTab = () => {
         </div>
 
         {/* Children */}
-        {node.children && node.children.length > 0 && (
+        {hasChildren && isExpanded && (
           <div className="flex justify-center space-x-8 mt-4">
             {node.children.map((child: any) => (
               <div key={child.id} className="relative">
@@ -182,17 +219,16 @@ const TreeViewTab = () => {
         </div>
       </div>
 
-      {/* Tree Visualization */}
+      {/* Tree Visualization Canvas */}
       <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-        <div 
-          className="overflow-auto" 
-          style={{ 
-            transform: `scale(${zoomLevel / 100})`,
-            transformOrigin: 'top center',
-            minHeight: '400px'
-          }}
-        >
-          <div className="flex justify-center pt-8">
+        <div className="w-full h-[600px] border border-gray-200 rounded-lg overflow-auto bg-gray-50">
+          <div 
+            className="min-w-[800px] min-h-[600px] flex justify-center items-start pt-8"
+            style={{ 
+              transform: `scale(${zoomLevel / 100})`,
+              transformOrigin: 'top center'
+            }}
+          >
             {renderNode(treeData)}
           </div>
         </div>

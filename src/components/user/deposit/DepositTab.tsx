@@ -61,26 +61,40 @@ const DepositTab = () => {
       <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Deposit Funds</h2>
         
-        {/* Deposit Type Selection */}
+        {/* Deposit Type Selection - Made Smaller */}
         <div className="mb-6">
           <Label className="text-base font-semibold mb-3 block">Select Deposit Method</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 max-w-md">
             <Button
               onClick={() => setDepositType('bank')}
               variant={depositType === 'bank' ? 'default' : 'outline'}
-              className="h-auto p-4 flex flex-col space-y-2"
+              className="h-16 flex flex-col space-y-1 text-xs"
+              size="sm"
             >
-              <QrCode className="w-8 h-8" />
+              <QrCode className="w-5 h-5" />
               <span>Bank Transfer</span>
             </Button>
             <Button
               onClick={() => setDepositType('crypto')}
               variant={depositType === 'crypto' ? 'default' : 'outline'}
-              className="h-auto p-4 flex flex-col space-y-2"
+              className="h-16 flex flex-col space-y-1 text-xs"
+              size="sm"
             >
-              <QrCode className="w-8 h-8" />
+              <QrCode className="w-5 h-5" />
               <span>Cryptocurrency</span>
             </Button>
+          </div>
+        </div>
+
+        {/* QR Code Display */}
+        <div className="mb-6">
+          <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg max-w-md">
+            <div className="flex items-center justify-center bg-white p-4 rounded border-2 border-dashed border-gray-300">
+              <QrCode className="w-24 h-24 text-gray-400" />
+            </div>
+            <p className="text-center text-sm text-gray-600 mt-2">
+              {depositType === 'bank' ? 'Scan to pay via UPI/Bank' : 'Scan to send crypto'}
+            </p>
           </div>
         </div>
 
@@ -200,37 +214,39 @@ const DepositTab = () => {
         </div>
       </div>
 
-      {/* Deposit History */}
+      {/* Deposit History - Made Scrollable */}
       <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4">Deposit History</h3>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Amount</th>
-                <th className="text-left p-2">Type</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pendingDeposits.map((deposit) => (
-                <tr key={deposit.id} className="border-b">
-                  <td className="p-2">₹{deposit.amount.toLocaleString()}</td>
-                  <td className="p-2">{deposit.type}</td>
-                  <td className="p-2">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      deposit.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {deposit.status}
-                    </span>
-                  </td>
-                  <td className="p-2">{deposit.date}</td>
+          <div className="min-w-[500px]">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Amount</th>
+                  <th className="text-left p-2">Type</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pendingDeposits.map((deposit) => (
+                  <tr key={deposit.id} className="border-b">
+                    <td className="p-2">₹{deposit.amount.toLocaleString()}</td>
+                    <td className="p-2">{deposit.type}</td>
+                    <td className="p-2">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        deposit.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {deposit.status}
+                      </span>
+                    </td>
+                    <td className="p-2">{deposit.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

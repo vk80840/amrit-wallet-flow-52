@@ -32,7 +32,7 @@ const UserDashboard = () => {
       case 'deposit':
         return <DepositTab />;
       case 'wallet':
-        return <WalletTab />;
+        return <WalletTab onNavigateToTab={setActiveTab} />;
       case 'profile':
         return <ProfileTab />;
       case 'team':

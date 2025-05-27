@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Download, AlertCircle } from 'lucide-react';
+import { Download, AlertCircle, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -90,26 +90,40 @@ const WithdrawTab = () => {
           </p>
         </div>
 
-        {/* Withdrawal Type Selection */}
+        {/* Withdrawal Type Selection - Made Smaller */}
         <div className="mb-6">
           <Label className="text-base font-semibold mb-3 block">Select Withdrawal Method</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 max-w-md">
             <Button
               onClick={() => setWithdrawType('bank')}
               variant={withdrawType === 'bank' ? 'default' : 'outline'}
-              className="h-auto p-4 flex flex-col space-y-2"
+              className="h-16 flex flex-col space-y-1 text-xs"
+              size="sm"
             >
-              <Download className="w-8 h-8" />
+              <Download className="w-5 h-5" />
               <span>Bank Transfer</span>
             </Button>
             <Button
               onClick={() => setWithdrawType('crypto')}
               variant={withdrawType === 'crypto' ? 'default' : 'outline'}
-              className="h-auto p-4 flex flex-col space-y-2"
+              className="h-16 flex flex-col space-y-1 text-xs"
+              size="sm"
             >
-              <Download className="w-8 h-8" />
+              <Download className="w-5 h-5" />
               <span>Cryptocurrency</span>
             </Button>
+          </div>
+        </div>
+
+        {/* QR Code Display */}
+        <div className="mb-6">
+          <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg max-w-md">
+            <div className="flex items-center justify-center bg-white p-4 rounded border-2 border-dashed border-gray-300">
+              <QrCode className="w-24 h-24 text-gray-400" />
+            </div>
+            <p className="text-center text-sm text-gray-600 mt-2">
+              {withdrawType === 'bank' ? 'Bank Transfer QR Code' : 'Crypto Wallet QR Code'}
+            </p>
           </div>
         </div>
 
@@ -186,41 +200,43 @@ const WithdrawTab = () => {
         </div>
       </div>
 
-      {/* Withdrawal History */}
+      {/* Withdrawal History - Made Scrollable */}
       <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4">Withdrawal History</h3>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Amount</th>
-                <th className="text-left p-2">Net Amount</th>
-                <th className="text-left p-2">Type</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {withdrawalHistory.map((withdrawal) => (
-                <tr key={withdrawal.id} className="border-b">
-                  <td className="p-2">₹{withdrawal.amount.toLocaleString()}</td>
-                  <td className="p-2 text-green-600">₹{withdrawal.netAmount.toLocaleString()}</td>
-                  <td className="p-2">{withdrawal.type}</td>
-                  <td className="p-2">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      withdrawal.status === 'Approved' ? 'bg-green-100 text-green-800' : 
-                      withdrawal.status === 'Rejected' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {withdrawal.status}
-                    </span>
-                  </td>
-                  <td className="p-2">{withdrawal.date}</td>
+          <div className="min-w-[600px]">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Amount</th>
+                  <th className="text-left p-2">Net Amount</th>
+                  <th className="text-left p-2">Type</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {withdrawalHistory.map((withdrawal) => (
+                  <tr key={withdrawal.id} className="border-b">
+                    <td className="p-2">₹{withdrawal.amount.toLocaleString()}</td>
+                    <td className="p-2 text-green-600">₹{withdrawal.netAmount.toLocaleString()}</td>
+                    <td className="p-2">{withdrawal.type}</td>
+                    <td className="p-2">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        withdrawal.status === 'Approved' ? 'bg-green-100 text-green-800' : 
+                        withdrawal.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {withdrawal.status}
+                      </span>
+                    </td>
+                    <td className="p-2">{withdrawal.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

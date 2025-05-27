@@ -7,7 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 
-const WalletTab = () => {
+interface WalletTabProps {
+  onNavigateToTab?: (tab: string) => void;
+}
+
+const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
   const { user } = useAuth();
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [transferAmount, setTransferAmount] = useState('');
@@ -111,7 +115,7 @@ const WalletTab = () => {
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <Button 
-            onClick={() => setActiveAction('deposit')}
+            onClick={() => onNavigateToTab?.('deposit')}
             className="bg-blue-500 hover:bg-blue-600 text-white p-4 h-auto flex-col space-y-2"
           >
             <ArrowDownLeft className="w-6 h-6" />
@@ -119,7 +123,7 @@ const WalletTab = () => {
           </Button>
           
           <Button 
-            onClick={() => setActiveAction('withdraw')}
+            onClick={() => onNavigateToTab?.('withdraw')}
             className="bg-red-500 hover:bg-red-600 text-white p-4 h-auto flex-col space-y-2"
           >
             <ArrowUpRight className="w-6 h-6" />
@@ -214,39 +218,41 @@ const WalletTab = () => {
         )}
       </div>
 
-      {/* Transaction History */}
+      {/* Transaction History - Made Scrollable */}
       <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4">Transaction History</h3>
         
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Type</th>
-                <th className="text-left p-2">Amount</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((tx) => (
-                <tr key={tx.id} className="border-b">
-                  <td className="p-2">{tx.type}</td>
-                  <td className={`p-2 ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    ₹{Math.abs(tx.amount).toLocaleString()}
-                  </td>
-                  <td className="p-2">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      tx.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {tx.status}
-                    </span>
-                  </td>
-                  <td className="p-2">{tx.date}</td>
+          <div className="min-w-[500px]">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Type</th>
+                  <th className="text-left p-2">Amount</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {transactions.map((tx) => (
+                  <tr key={tx.id} className="border-b">
+                    <td className="p-2">{tx.type}</td>
+                    <td className={`p-2 ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      ₹{Math.abs(tx.amount).toLocaleString()}
+                    </td>
+                    <td className="p-2">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        tx.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {tx.status}
+                      </span>
+                    </td>
+                    <td className="p-2">{tx.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

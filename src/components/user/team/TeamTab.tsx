@@ -12,29 +12,32 @@ const TeamTab = () => {
     leftTeam: 78,
     rightTeam: 78,
     directReferrals: 24,
+    directWithPurchases: 3, // Current direct referrals with purchases
     growlineReferrals: 132,
     totalEarnings: 15750,
     activeMembers: 142,
     inactiveMembers: 14
   };
 
+  // Fixed referral levels according to requirements
   const levels = [
     { level: 1, percentage: 15, unlocked: true, directRequired: 0, earned: 2250, bv: 150 },
-    { level: 2, percentage: 5, unlocked: true, directRequired: 2, earned: 750, bv: 150 },
-    { level: 3, percentage: 4, unlocked: true, directRequired: 3, earned: 600, bv: 150 },
-    { level: 4, percentage: 3, unlocked: false, directRequired: 4, earned: 0, bv: 0 },
-    { level: 5, percentage: 2, unlocked: false, directRequired: 5, earned: 0, bv: 0 },
-    { level: 6, percentage: 1, unlocked: false, directRequired: 6, earned: 0, bv: 0 },
-    { level: 7, percentage: 1, unlocked: false, directRequired: 7, earned: 0, bv: 0 },
-    { level: 8, percentage: 1, unlocked: false, directRequired: 8, earned: 0, bv: 0 },
-    { level: 9, percentage: 1, unlocked: false, directRequired: 9, earned: 0, bv: 0 },
-    { level: 10, percentage: 2, unlocked: false, directRequired: 10, earned: 0, bv: 0 },
+    { level: 2, percentage: 5, unlocked: teamStats.directWithPurchases >= 2, directRequired: 2, earned: 750, bv: 150 },
+    { level: 3, percentage: 4, unlocked: teamStats.directWithPurchases >= 3, directRequired: 3, earned: 600, bv: 150 },
+    { level: 4, percentage: 3, unlocked: teamStats.directWithPurchases >= 4, directRequired: 4, earned: 0, bv: 0 },
+    { level: 5, percentage: 2, unlocked: teamStats.directWithPurchases >= 5, directRequired: 5, earned: 0, bv: 0 },
+    { level: 6, percentage: 1, unlocked: teamStats.directWithPurchases >= 6, directRequired: 6, earned: 0, bv: 0 },
+    { level: 7, percentage: 1, unlocked: teamStats.directWithPurchases >= 7, directRequired: 7, earned: 0, bv: 0 },
+    { level: 8, percentage: 1, unlocked: teamStats.directWithPurchases >= 8, directRequired: 8, earned: 0, bv: 0 },
+    { level: 9, percentage: 1, unlocked: teamStats.directWithPurchases >= 9, directRequired: 9, earned: 0, bv: 0 },
+    { level: 10, percentage: 2, unlocked: teamStats.directWithPurchases >= 10, directRequired: 10, earned: 0, bv: 0 },
   ];
 
   const directReferrals = [
     { id: 'GB00002', name: 'John Doe', joinDate: '2024-01-15', purchased: true, amount: 5000 },
     { id: 'GB00003', name: 'Jane Smith', joinDate: '2024-01-10', purchased: true, amount: 3000 },
-    { id: 'GB00004', name: 'Mike Johnson', joinDate: '2024-01-08', purchased: false, amount: 0 },
+    { id: 'GB00004', name: 'Mike Johnson', joinDate: '2024-01-08', purchased: true, amount: 2000 },
+    { id: 'GB00005', name: 'Sarah Wilson', joinDate: '2024-01-05', purchased: false, amount: 0 },
   ];
 
   return (
@@ -95,8 +98,22 @@ const TeamTab = () => {
               <p className="text-2xl font-bold mt-1">{teamStats.rightTeam}</p>
             </div>
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-xl">
-              <h4 className="font-medium text-sm opacity-90">Direct Referrals</h4>
-              <p className="text-2xl font-bold mt-1">{teamStats.directReferrals}</p>
+              <h4 className="font-medium text-sm opacity-90">Direct with Purchases</h4>
+              <p className="text-2xl font-bold mt-1">{teamStats.directWithPurchases}</p>
+            </div>
+          </div>
+
+          {/* Referral Rewards Information */}
+          <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Referral Rewards System</h3>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-blue-800 mb-2">How Rewards Work:</h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• Rewards are calculated on the purchase amount of referred users</li>
+                <li>• Example: ₹5,000 purchase = ₹750 reward at 15% (Level 1)</li>
+                <li>• Each level requires direct referrals with purchases to unlock</li>
+                <li>• Level 1 is unlocked by default with 15% commission</li>
+              </ul>
             </div>
           </div>
 
@@ -144,9 +161,9 @@ const TeamTab = () => {
       {/* Levels View */}
       {activeView === 'levels' && (
         <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-6">Level-wise Earnings</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-6">Referral Levels & Rewards</h3>
           
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[600px] overflow-y-auto">
             {levels.map((level) => (
               <div key={level.level} className={`p-4 rounded-lg border-2 ${
                 level.unlocked ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
@@ -161,7 +178,7 @@ const TeamTab = () => {
                     <div>
                       <h4 className="font-semibold">Level {level.level}</h4>
                       <p className="text-sm text-gray-600">
-                        {level.percentage}% commission • {level.directRequired} direct referrals required
+                        {level.percentage}% commission • {level.directRequired === 0 ? 'Unlocked by default' : `${level.directRequired} direct referrals with purchases required`}
                       </p>
                     </div>
                   </div>
@@ -180,10 +197,10 @@ const TeamTab = () => {
                   </div>
                 </div>
                 
-                {!level.unlocked && (
+                {!level.unlocked && level.directRequired > 0 && (
                   <div className="mt-3 p-3 bg-yellow-50 rounded border border-yellow-200">
                     <p className="text-sm text-yellow-800">
-                      Need {level.directRequired - teamStats.directReferrals} more direct referrals with purchases to unlock
+                      Need {level.directRequired - teamStats.directWithPurchases} more direct referrals with purchases to unlock
                     </p>
                   </div>
                 )}
@@ -205,34 +222,36 @@ const TeamTab = () => {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">User ID</th>
-                  <th className="text-left p-2">Name</th>
-                  <th className="text-left p-2">Join Date</th>
-                  <th className="text-left p-2">Purchase Status</th>
-                  <th className="text-left p-2">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {directReferrals.map((referral) => (
-                  <tr key={referral.id} className="border-b">
-                    <td className="p-2 font-mono">{referral.id}</td>
-                    <td className="p-2">{referral.name}</td>
-                    <td className="p-2">{referral.joinDate}</td>
-                    <td className="p-2">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        referral.purchased ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {referral.purchased ? 'Purchased' : 'Not Purchased'}
-                      </span>
-                    </td>
-                    <td className="p-2">₹{referral.amount.toLocaleString()}</td>
+            <div className="min-w-[700px]">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2">User ID</th>
+                    <th className="text-left p-2">Name</th>
+                    <th className="text-left p-2">Join Date</th>
+                    <th className="text-left p-2">Purchase Status</th>
+                    <th className="text-left p-2">Amount</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {directReferrals.map((referral) => (
+                    <tr key={referral.id} className="border-b">
+                      <td className="p-2 font-mono">{referral.id}</td>
+                      <td className="p-2">{referral.name}</td>
+                      <td className="p-2">{referral.joinDate}</td>
+                      <td className="p-2">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          referral.purchased ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {referral.purchased ? 'Purchased' : 'Not Purchased'}
+                        </span>
+                      </td>
+                      <td className="p-2">₹{referral.amount.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
