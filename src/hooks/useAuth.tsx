@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface User {
@@ -35,7 +34,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock authentication - replace with real API call
+    // Admin authentication for 3 admin accounts
+    const adminAccounts = ['neeraj', 'vansh', 'deepanshu'];
+    const adminPassword = 'DEepu1234@&';
+    
+    if (adminAccounts.includes(email.toLowerCase()) && password === adminPassword) {
+      const adminUser: User = {
+        id: `admin_${email.toLowerCase()}`,
+        name: email.charAt(0).toUpperCase() + email.slice(1),
+        email: `${email.toLowerCase()}@alkalineamrit.com`,
+        mobile: '+91-9999999999',
+        userType: 'admin',
+        kycStatus: 'approved',
+        rank: 'admin',
+        referralCode: `ADMIN_${email.toUpperCase()}`
+      };
+      setUser(adminUser);
+      localStorage.setItem('alkaline_user', JSON.stringify(adminUser));
+      return true;
+    }
+
+    // Legacy admin login
     if (email === 'admin@alkalineamrit.com' && password === 'DEepu1234@&') {
       const adminUser: User = {
         id: 'admin1',
