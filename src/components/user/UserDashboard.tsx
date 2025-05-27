@@ -57,13 +57,13 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 w-full overflow-x-hidden">
       <UserHeader 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 
       />
       
-      <div className="flex">
+      <div className="flex w-full">
         <UserSidebar 
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -71,8 +71,8 @@ const UserDashboard = () => {
           setSidebarOpen={setSidebarOpen}
         />
         
-        <main className="flex-1 lg:ml-64 pt-16 pb-20 lg:pb-4 px-4">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 lg:ml-64 pt-16 pb-20 lg:pb-4 px-2 sm:px-4 w-full min-w-0">
+          <div className="max-w-7xl mx-auto w-full">
             {renderContent()}
           </div>
         </main>

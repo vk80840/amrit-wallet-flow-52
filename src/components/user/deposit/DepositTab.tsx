@@ -57,195 +57,204 @@ const DepositTab = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Deposit Funds</h2>
-        
-        {/* Deposit Type Selection - Made Smaller */}
-        <div className="mb-6">
-          <Label className="text-base font-semibold mb-3 block">Select Deposit Method</Label>
-          <div className="grid grid-cols-2 gap-3 max-w-md">
-            <Button
-              onClick={() => setDepositType('bank')}
-              variant={depositType === 'bank' ? 'default' : 'outline'}
-              className="h-16 flex flex-col space-y-1 text-xs"
-              size="sm"
-            >
-              <QrCode className="w-5 h-5" />
-              <span>Bank Transfer</span>
-            </Button>
-            <Button
-              onClick={() => setDepositType('crypto')}
-              variant={depositType === 'crypto' ? 'default' : 'outline'}
-              className="h-16 flex flex-col space-y-1 text-xs"
-              size="sm"
-            >
-              <QrCode className="w-5 h-5" />
-              <span>Cryptocurrency</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* QR Code Display */}
-        <div className="mb-6">
-          <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg max-w-md">
-            <div className="flex items-center justify-center bg-white p-4 rounded border-2 border-dashed border-gray-300">
-              <QrCode className="w-24 h-24 text-gray-400" />
-            </div>
-            <p className="text-center text-sm text-gray-600 mt-2">
-              {depositType === 'bank' ? 'Scan to pay via UPI/Bank' : 'Scan to send crypto'}
-            </p>
-          </div>
-        </div>
-
-        {/* Payment Details */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-4">
-            {depositType === 'bank' ? 'Bank Details' : 'Crypto Address'}
-          </h3>
+    <div className="w-full max-w-full overflow-hidden">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-3 sm:p-6 w-full">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Deposit Funds</h2>
           
-          {depositType === 'bank' ? (
-            <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Account Name</Label>
-                  <div className="flex items-center justify-between bg-white p-2 rounded border">
-                    <span className="text-sm">{bankDetails.accountName}</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => copyToClipboard(bankDetails.accountName, 'Account Name')}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
+          {/* Deposit Type Selection */}
+          <div className="mb-4 sm:mb-6">
+            <Label className="text-sm sm:text-base font-semibold mb-3 block">Select Deposit Method</Label>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 max-w-xs sm:max-w-md">
+              <Button
+                onClick={() => setDepositType('bank')}
+                variant={depositType === 'bank' ? 'default' : 'outline'}
+                className="h-12 sm:h-16 flex flex-col space-y-1 text-xs sm:text-sm p-2"
+                size="sm"
+              >
+                <QrCode className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Bank Transfer</span>
+              </Button>
+              <Button
+                onClick={() => setDepositType('crypto')}
+                variant={depositType === 'crypto' ? 'default' : 'outline'}
+                className="h-12 sm:h-16 flex flex-col space-y-1 text-xs sm:text-sm p-2"
+                size="sm"
+              >
+                <QrCode className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Cryptocurrency</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* QR Code Display */}
+          <div className="mb-4 sm:mb-6">
+            <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-lg max-w-xs sm:max-w-md">
+              <div className="flex items-center justify-center bg-white p-3 sm:p-4 rounded border-2 border-dashed border-gray-300">
+                <QrCode className="w-16 h-16 sm:w-24 sm:h-24 text-gray-400" />
+              </div>
+              <p className="text-center text-xs sm:text-sm text-gray-600 mt-2">
+                {depositType === 'bank' ? 'Scan to pay via UPI/Bank' : 'Scan to send crypto'}
+              </p>
+            </div>
+          </div>
+
+          {/* Payment Details */}
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+              {depositType === 'bank' ? 'Bank Details' : 'Crypto Address'}
+            </h3>
+            
+            {depositType === 'bank' ? (
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-3">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                  <div>
+                    <Label className="text-xs sm:text-sm font-medium text-gray-600">Account Name</Label>
+                    <div className="flex items-center justify-between bg-white p-2 rounded border mt-1">
+                      <span className="text-xs sm:text-sm truncate">{bankDetails.accountName}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyToClipboard(bankDetails.accountName, 'Account Name')}
+                        className="ml-2 p-1"
+                      >
+                        <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Account Number</Label>
-                  <div className="flex items-center justify-between bg-white p-2 rounded border">
-                    <span className="text-sm font-mono">{bankDetails.accountNumber}</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => copyToClipboard(bankDetails.accountNumber, 'Account Number')}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
+                  <div>
+                    <Label className="text-xs sm:text-sm font-medium text-gray-600">Account Number</Label>
+                    <div className="flex items-center justify-between bg-white p-2 rounded border mt-1">
+                      <span className="text-xs sm:text-sm font-mono truncate">{bankDetails.accountNumber}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyToClipboard(bankDetails.accountNumber, 'Account Number')}
+                        className="ml-2 p-1"
+                      >
+                        <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">IFSC Code</Label>
-                  <div className="flex items-center justify-between bg-white p-2 rounded border">
-                    <span className="text-sm font-mono">{bankDetails.ifsc}</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => copyToClipboard(bankDetails.ifsc, 'IFSC Code')}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
+                  <div>
+                    <Label className="text-xs sm:text-sm font-medium text-gray-600">IFSC Code</Label>
+                    <div className="flex items-center justify-between bg-white p-2 rounded border mt-1">
+                      <span className="text-xs sm:text-sm font-mono">{bankDetails.ifsc}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyToClipboard(bankDetails.ifsc, 'IFSC Code')}
+                        className="ml-2 p-1"
+                      >
+                        <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">Bank & Branch</Label>
-                  <div className="bg-white p-2 rounded border">
-                    <span className="text-sm">{bankDetails.bankName}, {bankDetails.branch}</span>
+                  <div>
+                    <Label className="text-xs sm:text-sm font-medium text-gray-600">Bank & Branch</Label>
+                    <div className="bg-white p-2 rounded border mt-1">
+                      <span className="text-xs sm:text-sm">{bankDetails.bankName}, {bankDetails.branch}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <Label className="text-sm font-medium text-gray-600">Bitcoin Address</Label>
-              <div className="flex items-center justify-between bg-white p-3 rounded border mt-2">
-                <span className="text-sm font-mono break-all mr-2">{cryptoAddress}</span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => copyToClipboard(cryptoAddress, 'Crypto Address')}
-                >
-                  <Copy className="w-4 h-4" />
-                </Button>
+            ) : (
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                <Label className="text-xs sm:text-sm font-medium text-gray-600">Bitcoin Address</Label>
+                <div className="flex items-center justify-between bg-white p-2 sm:p-3 rounded border mt-2">
+                  <span className="text-xs sm:text-sm font-mono break-all mr-2">{cryptoAddress}</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard(cryptoAddress, 'Crypto Address')}
+                    className="flex-shrink-0"
+                  >
+                    <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </Button>
+                </div>
               </div>
+            )}
+          </div>
+
+          {/* Deposit Form */}
+          <div className="space-y-3 sm:space-y-4">
+            <div>
+              <Label htmlFor="amount" className="text-xs sm:text-sm">Amount (₹)</Label>
+              <Input
+                id="amount"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Enter deposit amount"
+                className="mt-1"
+              />
             </div>
-          )}
+            
+            <div>
+              <Label htmlFor="utrId" className="text-xs sm:text-sm">UTR/Transaction ID</Label>
+              <Input
+                id="utrId"
+                value={utrId}
+                onChange={(e) => setUtrId(e.target.value)}
+                placeholder="Enter UTR or transaction ID"
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="proof" className="text-xs sm:text-sm">Proof Link (Google Drive)</Label>
+              <Input
+                id="proof"
+                value={proofLink}
+                onChange={(e) => setProofLink(e.target.value)}
+                placeholder="Enter Google Drive link to payment proof"
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Upload payment screenshot to Google Drive and share the link
+              </p>
+            </div>
+            
+            <Button onClick={handleSubmit} className="w-full text-sm">
+              <Upload className="w-4 h-4 mr-2" />
+              Submit Deposit Request
+            </Button>
+          </div>
         </div>
 
-        {/* Deposit Form */}
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="amount">Amount (₹)</Label>
-            <Input
-              id="amount"
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter deposit amount"
-            />
-          </div>
+        {/* Deposit History */}
+        <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-3 sm:p-6 w-full">
+          <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Deposit History</h3>
           
-          <div>
-            <Label htmlFor="utrId">UTR/Transaction ID</Label>
-            <Input
-              id="utrId"
-              value={utrId}
-              onChange={(e) => setUtrId(e.target.value)}
-              placeholder="Enter UTR or transaction ID"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="proof">Proof Link (Google Drive)</Label>
-            <Input
-              id="proof"
-              value={proofLink}
-              onChange={(e) => setProofLink(e.target.value)}
-              placeholder="Enter Google Drive link to payment proof"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Upload payment screenshot to Google Drive and share the link
-            </p>
-          </div>
-          
-          <Button onClick={handleSubmit} className="w-full">
-            <Upload className="w-4 h-4 mr-2" />
-            Submit Deposit Request
-          </Button>
-        </div>
-      </div>
-
-      {/* Deposit History - Made Scrollable */}
-      <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Deposit History</h3>
-        
-        <div className="overflow-x-auto">
-          <div className="min-w-[500px]">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Amount</th>
-                  <th className="text-left p-2">Type</th>
-                  <th className="text-left p-2">Status</th>
-                  <th className="text-left p-2">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingDeposits.map((deposit) => (
-                  <tr key={deposit.id} className="border-b">
-                    <td className="p-2">₹{deposit.amount.toLocaleString()}</td>
-                    <td className="p-2">{deposit.type}</td>
-                    <td className="p-2">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        deposit.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {deposit.status}
-                      </span>
-                    </td>
-                    <td className="p-2">{deposit.date}</td>
+          <div className="overflow-x-auto">
+            <div className="min-w-[400px]">
+              <table className="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2">Amount</th>
+                    <th className="text-left p-2">Type</th>
+                    <th className="text-left p-2">Status</th>
+                    <th className="text-left p-2">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {pendingDeposits.map((deposit) => (
+                    <tr key={deposit.id} className="border-b">
+                      <td className="p-2">₹{deposit.amount.toLocaleString()}</td>
+                      <td className="p-2">{deposit.type}</td>
+                      <td className="p-2">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          deposit.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {deposit.status}
+                        </span>
+                      </td>
+                      <td className="p-2">{deposit.date}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
