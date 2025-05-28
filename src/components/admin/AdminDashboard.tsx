@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import AdminSidebar from './AdminSidebar';
@@ -12,8 +11,7 @@ import ProductManagement from './products/ProductManagement';
 import OrderManagement from './orders/OrderManagement';
 import TeamTreeViewer from './team/TeamTreeViewer';
 import AnnouncementManagement from './announcements/AnnouncementManagement';
-import WalletAdjustment from './wallet/WalletAdjustment';
-import ActivityLogs from './logs/ActivityLogs';
+import ActivityLogs from './activity/ActivityLogs';
 import SystemSettings from './settings/SystemSettings';
 import STKManagement from './stk/STKManagement';
 
@@ -43,7 +41,7 @@ const AdminDashboard = () => {
         return <AnnouncementManagement />;
       case 'wallet-adjustment':
         return <WalletAdjustment />;
-      case 'logs':
+      case 'activity-logs':
         return <ActivityLogs />;
       case 'stk':
         return <STKManagement />;
@@ -60,7 +58,7 @@ const AdminDashboard = () => {
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 
       />
-      
+
       <div className="flex">
         <AdminSidebar 
           activeTab={activeTab}
@@ -68,7 +66,7 @@ const AdminDashboard = () => {
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
         />
-        
+
         <main className="flex-1 lg:ml-64 pt-16 p-6">
           <div className="max-w-7xl mx-auto">
             {renderContent()}

@@ -1,4 +1,3 @@
-
 import { X, LayoutDashboard, Users, FileCheck, Download, Upload, Package, ShoppingCart, TreePine, Bell, Wallet, Activity, Settings, Coins } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -22,9 +21,7 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }: 
     { id: 'orders', label: 'Orders', icon: ShoppingCart },
     { id: 'team-tree', label: 'Team Tree', icon: TreePine },
     { id: 'announcements', label: 'Announcements', icon: Bell },
-    { id: 'wallet-adjustment', label: 'Wallet Adjustment', icon: Wallet },
-    { id: 'stk', label: 'STK Management', icon: Coins },
-    { id: 'logs', label: 'Activity Logs', icon: Activity },
+    { id: 'activity-logs', label: 'Activity Logs', icon: Activity },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -37,12 +34,12 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }: 
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      
+
       {/* Sidebar */}
       <div className={`fixed left-0 top-0 h-full w-64 bg-white/90 backdrop-blur-lg border-r border-white/20 shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
-        
+
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">

@@ -20,11 +20,11 @@ const DashboardOverview = () => {
   };
 
   const recentActivity = [
-    { id: 1, action: 'New user registration', user: 'John Doe (GB00015)', time: '2 minutes ago' },
-    { id: 2, action: 'KYC submitted', user: 'Jane Smith (GB00016)', time: '5 minutes ago' },
-    { id: 3, action: 'Withdrawal request', user: 'Bob Wilson (GB00017)', time: '8 minutes ago' },
-    { id: 4, action: 'Order placed', user: 'Alice Brown (GB00018)', time: '12 minutes ago' },
-    { id: 5, action: 'STK purchase', user: 'Charlie Davis (GB00019)', time: '15 minutes ago' }
+    { id: 1, action: 'User Login', user: 'John Doe (GB00015)', time: '2 minutes ago', severity: 'low' },
+    { id: 2, action: 'KYC Submitted', user: 'Jane Smith (GB00016)', time: '5 minutes ago', severity: 'medium' },
+    { id: 3, action: 'Withdrawal Request', user: 'Bob Wilson (GB00017)', time: '8 minutes ago', severity: 'high' },
+    { id: 4, action: 'Order Placed', user: 'Alice Brown (GB00018)', time: '12 minutes ago', severity: 'low' },
+    { id: 5, action: 'STK Purchase', user: 'Charlie Davis (GB00019)', time: '15 minutes ago', severity: 'medium' }
   ];
 
   return (
@@ -158,13 +158,24 @@ const DashboardOverview = () => {
           {recentActivity.map((activity) => (
             <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
-                <Activity className="w-5 h-5 text-gray-500" />
+                <Activity className={`w-5 h-5 ${
+                  activity.severity === 'high' ? 'text-red-500' :
+                  activity.severity === 'medium' ? 'text-yellow-500' : 'text-green-500'
+                }`} />
                 <div>
                   <p className="font-medium text-gray-800">{activity.action}</p>
                   <p className="text-sm text-gray-600">{activity.user}</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-500">{activity.time}</span>
+              <div className="flex items-center space-x-2">
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  activity.severity === 'high' ? 'bg-red-100 text-red-600' :
+                  activity.severity === 'medium' ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600'
+                }`}>
+                  {activity.severity}
+                </span>
+                <span className="text-xs text-gray-500">{activity.time}</span>
+              </div>
             </div>
           ))}
         </div>
