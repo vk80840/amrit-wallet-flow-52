@@ -3,8 +3,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { User, Mail, Phone, IdCard, Copy, Star, Calendar, TrendingUp, Users, ShoppingBag, DollarSign, Award } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { getUserRank, getNextRank } from '@/utils/rankSystem';
-import RankBadge from '../rank/RankBadge';
 
 const DashboardContent = () => {
   const { user } = useAuth();
@@ -17,9 +15,24 @@ const DashboardContent = () => {
     nextSlabRequirement: 20000 // BV needed for next slab
   };
 
-  // Get current rank based on completed salary levels
-  const currentRank = getUserRank(mockUserData.salaryLevel);
-  const nextRank = getNextRank(mockUserData.salaryLevel);
+  // Get salary level rank
+  const getSalaryRank = (level: number) => {
+    const ranks = [
+      { level: 0, name: 'Wood', color: 'from-amber-600 to-amber-700' },
+      { level: 1, name: 'Iron', color: 'from-gray-600 to-gray-700' },
+      { level: 2, name: 'Bronze', color: 'from-orange-600 to-orange-700' },
+      { level: 3, name: 'Silver', color: 'from-gray-400 to-gray-500' },
+      { level: 4, name: 'Gold', color: 'from-yellow-500 to-yellow-600' },
+      { level: 5, name: 'Platinum', color: 'from-indigo-500 to-indigo-600' },
+      { level: 6, name: 'Diamond', color: 'from-blue-500 to-blue-600' },
+      { level: 7, name: 'Crown', color: 'from-purple-500 to-purple-600' },
+      { level: 8, name: 'Royal Crown', color: 'from-pink-500 to-pink-600' }
+    ];
+    return ranks.find(rank => rank.level === level) || ranks[0];
+  };
+
+  const currentRank = getSalaryRank(mockUserData.salaryLevel);
+  const nextRank = getSalaryRank(mockUserData.salaryLevel + 1);
 
   // Random profile pictures from Unsplash
   const profilePictures = [
@@ -124,7 +137,9 @@ const DashboardContent = () => {
                   }`}>
                     KYC: {user?.kycStatus}
                   </span>
-                  <RankBadge rank={currentRank} size="sm" />
+                  <span className={`px-3 py-1 text-sm font-medium rounded-full bg-gradient-to-r ${currentRank.color} text-white`}>
+                    {currentRank.name} Rank
+                  </span>
                 </div>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm text-gray-600">
@@ -189,10 +204,12 @@ const DashboardContent = () => {
           {/* Current Rank */}
           <div className="text-center p-6 rounded-lg border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-green-50">
             <div className="mb-3">
-              <RankBadge rank={currentRank} size="lg" />
+              <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-r ${currentRank.color} flex items-center justify-center text-white font-bold text-lg`}>
+                {currentRank.name.charAt(0)}
+              </div>
             </div>
             <h4 className="font-semibold text-lg text-gray-800">Current Rank</h4>
-            <p className="text-sm text-gray-600 mt-1">Salary Level {currentRank.level}</p>
+            <p className="text-sm text-gray-600 mt-1">{currentRank.name} - Level {currentRank.level}</p>
             <div className="mt-3">
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full w-full"></div>
@@ -205,10 +222,12 @@ const DashboardContent = () => {
           {nextRank && (
             <div className="text-center p-6 rounded-lg border-2 border-gray-300 bg-gradient-to-r from-gray-50 to-gray-100">
               <div className="mb-3">
-                <RankBadge rank={nextRank} size="lg" />
+                <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-r ${nextRank.color} flex items-center justify-center text-white font-bold text-lg opacity-50`}>
+                  {nextRank.name.charAt(0)}
+                </div>
               </div>
               <h4 className="font-semibold text-lg text-gray-800">Next Rank</h4>
-              <p className="text-sm text-gray-600 mt-1">Salary Level {nextRank.level}</p>
+              <p className="text-sm text-gray-600 mt-1">{nextRank.name} - Level {nextRank.level}</p>
               <div className="mt-3">
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div className="bg-gradient-to-r from-gray-400 to-gray-500 h-3 rounded-full w-1/4"></div>
