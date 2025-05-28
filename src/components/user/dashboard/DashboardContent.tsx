@@ -3,10 +3,23 @@ import { useAuth } from '@/hooks/useAuth';
 import { User, Mail, Phone, IdCard, Copy, Star, Calendar, TrendingUp, Users, ShoppingBag, DollarSign, Award } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { getUserRank, getNextRank } from '@/utils/rankSystem';
+import RankBadge from '../rank/RankBadge';
 
 const DashboardContent = () => {
   const { user } = useAuth();
-  const [currentRankIndex, setCurrentRankIndex] = useState(0);
+  
+  // Mock user data with salary level (BV completed slabs)
+  const mockUserData = {
+    salaryLevel: 3, // User has completed 3 salary slabs
+    totalBV: 15000, // Total Business Volume
+    completedSlabs: 3, // Only slabs that are fully completed count towards salary
+    nextSlabRequirement: 20000 // BV needed for next slab
+  };
+
+  // Get current rank based on completed salary levels
+  const currentRank = getUserRank(mockUserData.salaryLevel);
+  const nextRank = getNextRank(mockUserData.salaryLevel);
 
   // Random profile pictures from Unsplash
   const profilePictures = [
@@ -64,39 +77,22 @@ const DashboardContent = () => {
       icon: TrendingUp
     },
     { 
-      label: 'Salary', 
-      value: '₹625', 
+      label: 'Salary Level', 
+      value: mockUserData.salaryLevel.toString(), 
       color: 'from-pink-500 to-pink-600',
       icon: Award
     },
     { 
       label: 'Business Volume', 
-      value: '5,000 BV', 
+      value: `${mockUserData.totalBV.toLocaleString()} BV`, 
       color: 'from-indigo-500 to-indigo-600',
       icon: TrendingUp
     },
   ];
 
-  const ranks = [
-    { name: 'Wood', required: '0 BV', current: true, image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=100&h=100&fit=crop' },
-    { name: 'Silver', required: '1,000 BV', current: false, image: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=100&h=100&fit=crop' },
-    { name: 'Gold', required: '5,000 BV', current: false, image: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=100&h=100&fit=crop' },
-    { name: 'Platinum', required: '15,000 BV', current: false, image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=100&h=100&fit=crop' },
-    { name: 'Diamond', required: '50,000 BV', current: false, image: 'https://images.unsplash.com/photo-1482881497185-d4a9ddbe4151?w=100&h=100&fit=crop' },
-    { name: 'Ruby', required: '100,000 BV', current: false, image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=100&h=100&fit=crop' },
-  ];
-
-  const nextRank = () => {
-    setCurrentRankIndex((prev) => (prev + 1) % ranks.length);
-  };
-
-  const prevRank = () => {
-    setCurrentRankIndex((prev) => (prev - 1 + ranks.length) % ranks.length);
-  };
-
   return (
     <div className="space-y-6">
-      {/* Enhanced Profile Section */}
+      {/* Enhanced Profile Section with Salary Rank */}
       <div className="bg-gradient-to-r from-blue-50 to-green-50 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
         <div className="flex flex-col md:flex-row md:items-center space-y-6 md:space-y-0 md:space-x-8">
           {/* Profile Picture */}
@@ -128,6 +124,7 @@ const DashboardContent = () => {
                   }`}>
                     KYC: {user?.kycStatus}
                   </span>
+                  <RankBadge rank={currentRank} size="sm" />
                 </div>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm text-gray-600">
@@ -144,8 +141,8 @@ const DashboardContent = () => {
                     <span>Joined: 15 Jan 2024</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Star className="w-4 h-4 text-yellow-500" />
-                    <span>Rank: {user?.rank}</span>
+                    <Award className="w-4 h-4 text-yellow-500" />
+                    <span>Salary Level: {mockUserData.salaryLevel}</span>
                   </div>
                 </div>
               </div>
@@ -182,6 +179,53 @@ const DashboardContent = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Salary Rank Progress */}
+      <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Salary Rank Progress</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Current Rank */}
+          <div className="text-center p-6 rounded-lg border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-green-50">
+            <div className="mb-3">
+              <RankBadge rank={currentRank} size="lg" />
+            </div>
+            <h4 className="font-semibold text-lg text-gray-800">Current Rank</h4>
+            <p className="text-sm text-gray-600 mt-1">Salary Level {currentRank.level}</p>
+            <div className="mt-3">
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full w-full"></div>
+              </div>
+              <p className="text-xs text-blue-600 mt-2 font-medium">Achieved</p>
+            </div>
+          </div>
+
+          {/* Next Rank */}
+          {nextRank && (
+            <div className="text-center p-6 rounded-lg border-2 border-gray-300 bg-gradient-to-r from-gray-50 to-gray-100">
+              <div className="mb-3">
+                <RankBadge rank={nextRank} size="lg" />
+              </div>
+              <h4 className="font-semibold text-lg text-gray-800">Next Rank</h4>
+              <p className="text-sm text-gray-600 mt-1">Salary Level {nextRank.level}</p>
+              <div className="mt-3">
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-gradient-to-r from-gray-400 to-gray-500 h-3 rounded-full w-1/4"></div>
+                </div>
+                <p className="text-xs text-gray-600 mt-2 font-medium">Complete next slab to unlock</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800">
+            <strong>Note:</strong> Salary rank is based on completed salary slabs only. 
+            Current BV: {mockUserData.totalBV.toLocaleString()} | 
+            Next Slab Requirement: {mockUserData.nextSlabRequirement.toLocaleString()} BV
+          </p>
+        </div>
       </div>
 
       {/* Referral Section */}
@@ -229,46 +273,6 @@ const DashboardContent = () => {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Current Rank Display */}
-      <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Current Rank Progress</h3>
-        
-        <div className="flex items-center justify-center space-x-4">
-          <Button onClick={prevRank} variant="outline" size="sm">←</Button>
-          
-          <div className="text-center p-6 rounded-lg border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-green-50 min-w-[200px]">
-            <img 
-              src={ranks[currentRankIndex].image} 
-              alt={ranks[currentRankIndex].name}
-              className="w-16 h-16 mx-auto rounded-full object-cover mb-3 border-2 border-white shadow-lg"
-            />
-            <h4 className="font-semibold text-lg text-gray-800">{ranks[currentRankIndex].name}</h4>
-            <p className="text-sm text-gray-600 mt-1">{ranks[currentRankIndex].required}</p>
-            {ranks[currentRankIndex].current && (
-              <div className="mt-3">
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full w-3/4"></div>
-                </div>
-                <p className="text-xs text-blue-600 mt-2 font-medium">Current Rank (75% to next level)</p>
-              </div>
-            )}
-          </div>
-          
-          <Button onClick={nextRank} variant="outline" size="sm">→</Button>
-        </div>
-        
-        <div className="flex justify-center mt-4 space-x-1">
-          {ranks.map((_, index) => (
-            <div 
-              key={index}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentRankIndex ? 'bg-blue-500' : 'bg-gray-300'
-              }`}
-            />
-          ))}
         </div>
       </div>
     </div>

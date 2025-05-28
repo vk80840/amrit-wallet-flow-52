@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Admin authentication for 3 admin accounts
+    // New admin authentication for 3 admin accounts
     const adminAccounts = ['neeraj', 'vansh', 'deepanshu'];
     const adminPassword = 'DEepu1234@&';
     
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return true;
     }
 
-    // Legacy admin login
+    // Legacy admin login for backward compatibility
     if (email === 'admin@alkalineamrit.com' && password === 'DEepu1234@&') {
       const adminUser: User = {
         id: 'admin1',
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return true;
     }
 
-    // Mock user login
+    // Mock user login with salary level
     if (email && password) {
       const mockUser: User = {
         id: 'GB00001',
@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         mobile: '+91-9876543210',
         userType: 'user',
         kycStatus: 'pending',
-        rank: 'Wood',
+        rank: 'Silver', // This will be determined by salary level
         referralCode: 'TEST001'
       };
       setUser(mockUser);
