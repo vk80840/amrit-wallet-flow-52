@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface User {
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // New admin authentication for 3 admin accounts
+    // Admin authentication for 3 admin accounts
     const adminAccounts = ['neeraj', 'vansh', 'deepanshu'];
     const adminPassword = 'DEepu1234@&';
     
@@ -71,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return true;
     }
 
-    // Mock user login with salary level
+    // Mock user login
     if (email && password) {
       const mockUser: User = {
         id: 'GB00001',
@@ -80,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         mobile: '+91-9876543210',
         userType: 'user',
         kycStatus: 'pending',
-        rank: 'Silver', // This will be determined by salary level
+        rank: 'Wood', // Default rank for new users
         referralCode: 'TEST001'
       };
       setUser(mockUser);

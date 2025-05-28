@@ -1,10 +1,8 @@
 
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoadingScreen from '@/components/LoadingScreen';
 import AuthPage from '@/components/auth/AuthPage';
 import UserDashboard from '@/components/user/UserDashboard';
-import AdminDashboard from '@/components/admin/AdminDashboard';
 import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
@@ -20,6 +18,12 @@ const Index = () => {
     return <LoadingScreen />;
   }
 
+  // If user is admin, redirect to admin panel
+  if (isAdmin) {
+    window.location.href = '/adminpanel';
+    return <LoadingScreen />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Background Pattern */}
@@ -29,8 +33,6 @@ const Index = () => {
       
       {!user ? (
         <AuthPage />
-      ) : isAdmin ? (
-        <AdminDashboard />
       ) : (
         <UserDashboard />
       )}
