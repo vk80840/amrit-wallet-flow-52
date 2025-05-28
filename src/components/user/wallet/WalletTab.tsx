@@ -87,171 +87,174 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl">
-          <div className="flex items-center justify-between mb-4">
-            <Wallet className="w-8 h-8" />
-            <span className="text-blue-100 text-sm">Withdrawable</span>
+    <div className="w-full max-w-full overflow-hidden">
+      <div className="space-y-4 sm:space-y-6">
+        {/* Balance Cards - Mobile Responsive */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 sm:p-6 rounded-xl">
+            <div className="flex items-center justify-between mb-4">
+              <Wallet className="w-6 sm:w-8 h-6 sm:h-8" />
+              <span className="text-blue-100 text-xs sm:text-sm">Withdrawable</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold mb-2">Main Balance</h3>
+            <p className="text-2xl sm:text-3xl font-bold">₹{mainBalance.toLocaleString()}</p>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Main Balance</h3>
-          <p className="text-3xl font-bold">₹{mainBalance.toLocaleString()}</p>
-        </div>
-        
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl">
-          <div className="flex items-center justify-between mb-4">
-            <Wallet className="w-8 h-8" />
-            <span className="text-green-100 text-sm">Shopping</span>
+          
+          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 sm:p-6 rounded-xl">
+            <div className="flex items-center justify-between mb-4">
+              <Wallet className="w-6 sm:w-8 h-6 sm:h-8" />
+              <span className="text-green-100 text-xs sm:text-sm">Shopping</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold mb-2">Top-up Balance</h3>
+            <p className="text-2xl sm:text-3xl font-bold">₹{topupBalance.toLocaleString()}</p>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Top-up Balance</h3>
-          <p className="text-3xl font-bold">₹{topupBalance.toLocaleString()}</p>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Button 
-            onClick={() => onNavigateToTab?.('deposit')}
-            className="bg-blue-500 hover:bg-blue-600 text-white p-4 h-auto flex-col space-y-2"
-          >
-            <ArrowDownLeft className="w-6 h-6" />
-            <span>Deposit</span>
-          </Button>
-          
-          <Button 
-            onClick={() => onNavigateToTab?.('withdraw')}
-            className="bg-red-500 hover:bg-red-600 text-white p-4 h-auto flex-col space-y-2"
-          >
-            <ArrowUpRight className="w-6 h-6" />
-            <span>Withdraw</span>
-          </Button>
-          
-          <Button 
-            onClick={() => setActiveAction('topup')}
-            className="bg-green-500 hover:bg-green-600 text-white p-4 h-auto flex-col space-y-2"
-          >
-            <RefreshCw className="w-6 h-6" />
-            <span>Top-up</span>
-          </Button>
-          
-          <Button 
-            onClick={() => setActiveAction('transfer')}
-            className="bg-purple-500 hover:bg-purple-600 text-white p-4 h-auto flex-col space-y-2"
-          >
-            <Users className="w-6 h-6" />
-            <span>Transfer</span>
-          </Button>
         </div>
 
-        {/* Transfer Form */}
-        {activeAction === 'transfer' && (
-          <div className="border-t pt-4 space-y-4">
-            <h4 className="font-semibold">User to User Transfer</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="userId">User ID</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    id="userId"
-                    value={transferUserId}
-                    onChange={(e) => setTransferUserId(e.target.value)}
-                    placeholder="Enter User ID"
-                  />
-                  <Button onClick={handleVerifyUser} variant="outline">
-                    Verify
-                  </Button>
+        {/* Action Buttons - Mobile Responsive */}
+        <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
+          
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <Button 
+              onClick={() => onNavigateToTab?.('deposit')}
+              className="bg-blue-500 hover:bg-blue-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2"
+            >
+              <ArrowDownLeft className="w-5 sm:w-6 h-5 sm:h-6" />
+              <span className="text-xs sm:text-sm">Deposit</span>
+            </Button>
+            
+            <Button 
+              onClick={() => onNavigateToTab?.('withdraw')}
+              className="bg-red-500 hover:bg-red-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2"
+            >
+              <ArrowUpRight className="w-5 sm:w-6 h-5 sm:h-6" />
+              <span className="text-xs sm:text-sm">Withdraw</span>
+            </Button>
+            
+            <Button 
+              onClick={() => setActiveAction('topup')}
+              className="bg-green-500 hover:bg-green-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2"
+            >
+              <RefreshCw className="w-5 sm:w-6 h-5 sm:h-6" />
+              <span className="text-xs sm:text-sm">Top-up</span>
+            </Button>
+            
+            <Button 
+              onClick={() => setActiveAction('transfer')}
+              className="bg-purple-500 hover:bg-purple-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2"
+            >
+              <Users className="w-5 sm:w-6 h-5 sm:h-6" />
+              <span className="text-xs sm:text-sm">Transfer</span>
+            </Button>
+          </div>
+
+          {/* Transfer Form - Mobile Responsive */}
+          {activeAction === 'transfer' && (
+            <div className="border-t pt-4 space-y-4">
+              <h4 className="font-semibold text-sm sm:text-base">User to User Transfer</h4>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="userId" className="text-sm">User ID</Label>
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <Input
+                      id="userId"
+                      value={transferUserId}
+                      onChange={(e) => setTransferUserId(e.target.value)}
+                      placeholder="Enter User ID"
+                      className="flex-1"
+                    />
+                    <Button onClick={handleVerifyUser} variant="outline" className="w-full sm:w-auto">
+                      Verify
+                    </Button>
+                  </div>
+                  {verifiedUser && (
+                    <p className="text-green-600 text-sm mt-1">✓ {verifiedUser}</p>
+                  )}
                 </div>
-                {verifiedUser && (
-                  <p className="text-green-600 text-sm mt-1">✓ {verifiedUser}</p>
-                )}
+                <div>
+                  <Label htmlFor="amount" className="text-sm">Amount</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={transferAmount}
+                    onChange={(e) => setTransferAmount(e.target.value)}
+                    placeholder="Enter amount"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Charges: 6% + 2% TDS</p>
+                </div>
               </div>
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <Button onClick={handleTransfer} disabled={!verifiedUser} className="w-full sm:w-auto">
+                  Transfer
+                </Button>
+                <Button onClick={() => setActiveAction(null)} variant="outline" className="w-full sm:w-auto">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Top-up Form - Mobile Responsive */}
+          {activeAction === 'topup' && (
+            <div className="border-t pt-4 space-y-4">
+              <h4 className="font-semibold text-sm sm:text-base">Transfer to Top-up Balance</h4>
               <div>
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="topupAmount" className="text-sm">Amount</Label>
                 <Input
-                  id="amount"
+                  id="topupAmount"
                   type="number"
-                  value={transferAmount}
-                  onChange={(e) => setTransferAmount(e.target.value)}
-                  placeholder="Enter amount"
+                  value={topupAmount}
+                  onChange={(e) => setTopupAmount(e.target.value)}
+                  placeholder="Enter amount to transfer"
                 />
-                <p className="text-xs text-gray-500 mt-1">Charges: 6% + 2% TDS</p>
+              </div>
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <Button onClick={handleTopup} className="w-full sm:w-auto">
+                  Transfer
+                </Button>
+                <Button onClick={() => setActiveAction(null)} variant="outline" className="w-full sm:w-auto">
+                  Cancel
+                </Button>
               </div>
             </div>
-            <div className="flex space-x-2">
-              <Button onClick={handleTransfer} disabled={!verifiedUser}>
-                Transfer
-              </Button>
-              <Button onClick={() => setActiveAction(null)} variant="outline">
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Top-up Form */}
-        {activeAction === 'topup' && (
-          <div className="border-t pt-4 space-y-4">
-            <h4 className="font-semibold">Transfer to Top-up Balance</h4>
-            <div>
-              <Label htmlFor="topupAmount">Amount</Label>
-              <Input
-                id="topupAmount"
-                type="number"
-                value={topupAmount}
-                onChange={(e) => setTopupAmount(e.target.value)}
-                placeholder="Enter amount to transfer"
-              />
-            </div>
-            <div className="flex space-x-2">
-              <Button onClick={handleTopup}>
-                Transfer
-              </Button>
-              <Button onClick={() => setActiveAction(null)} variant="outline">
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Transaction History - Made Scrollable */}
-      <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Transaction History</h3>
-        
-        <div className="overflow-x-auto">
-          <div className="min-w-[500px]">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Type</th>
-                  <th className="text-left p-2">Amount</th>
-                  <th className="text-left p-2">Status</th>
-                  <th className="text-left p-2">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((tx) => (
-                  <tr key={tx.id} className="border-b">
-                    <td className="p-2">{tx.type}</td>
-                    <td className={`p-2 ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ₹{Math.abs(tx.amount).toLocaleString()}
-                    </td>
-                    <td className="p-2">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        tx.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {tx.status}
-                      </span>
-                    </td>
-                    <td className="p-2">{tx.date}</td>
+        {/* Transaction History - Mobile Responsive */}
+        <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Transaction History</h3>
+          
+          <div className="overflow-x-auto">
+            <div className="min-w-[400px]">
+              <table className="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2 sm:p-3">Type</th>
+                    <th className="text-left p-2 sm:p-3">Amount</th>
+                    <th className="text-left p-2 sm:p-3">Status</th>
+                    <th className="text-left p-2 sm:p-3">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {transactions.map((tx) => (
+                    <tr key={tx.id} className="border-b">
+                      <td className="p-2 sm:p-3">{tx.type}</td>
+                      <td className={`p-2 sm:p-3 ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ₹{Math.abs(tx.amount).toLocaleString()}
+                      </td>
+                      <td className="p-2 sm:p-3">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          tx.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {tx.status}
+                        </span>
+                      </td>
+                      <td className="p-2 sm:p-3">{tx.date}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

@@ -1,7 +1,6 @@
 
 import { X, LayoutDashboard, Users, FileCheck, Download, Upload, Package, ShoppingCart, TreePine, Bell, Wallet, Activity, Settings, Coins } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -66,7 +65,7 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }: 
         </div>
 
         {/* Scrollable Menu Items */}
-        <ScrollArea className="flex-1 h-[calc(100vh-180px)]">
+        <div className="flex-1 h-[calc(100vh-180px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
           <div className="p-4">
             <nav className="space-y-2">
               {menuItems.map((item) => {
@@ -91,7 +90,7 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }: 
               })}
             </nav>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Logout Button */}
         <div className="p-4 border-t border-gray-200">

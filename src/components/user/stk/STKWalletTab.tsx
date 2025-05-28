@@ -85,22 +85,23 @@ const STKWalletTab = () => {
             </div>
           </div>
 
-          {/* Locked STK Information */}
+          {/* Enhanced Locked STK Information */}
           <div className="bg-red-50 border border-red-200 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
             <h4 className="font-semibold text-red-800 mb-2 flex items-center">
               <Lock className="w-4 h-4 mr-2" />
-              Locked STK Information
+              Locked STK Information (15-Month Lock Period)
             </h4>
             <ul className="text-xs sm:text-sm text-red-700 space-y-1">
-              <li>• All STK received from rewards, referrals, and bonuses are locked for 15 months</li>
-              <li>• Locked STK cannot be sold or transferred</li>
-              <li>• Locked STK will automatically become available after the lock period</li>
+              <li>• All STK received from rewards, referrals, bonuses, and any other source are automatically locked for 15 months</li>
+              <li>• Locked STK cannot be sold, transferred, or traded during the lock period</li>
+              <li>• Locked STK will automatically become available after exactly 15 months from the date received</li>
               <li>• Only purchased STK is immediately available for trading</li>
-              <li>• Total Locked: {stkData.lockedBalance.toLocaleString()} STK</li>
+              <li>• Total Locked: {stkData.lockedBalance.toLocaleString()} STK (valued at ₹{(stkData.lockedBalance * stkData.currentPrice).toFixed(2)})</li>
+              <li>• Lock period ensures long-term commitment and stability of the STK ecosystem</li>
             </ul>
           </div>
 
-          {/* Buy/Sell Section */}
+          {/* Buy/Sell Section - Mobile Responsive */}
           <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
             <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Buy/Sell STK</h4>
             
@@ -168,21 +169,22 @@ const STKWalletTab = () => {
           <div className="bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-lg">
             <h4 className="font-semibold text-yellow-800 mb-2 text-sm sm:text-base">STK Token Information</h4>
             <ul className="text-xs sm:text-sm text-yellow-700 space-y-1">
-              <li>• STK is AlkalineAmrit's internal cryptocurrency</li>
-              <li>• Price fluctuates based on market demand</li>
-              <li>• Can be earned through rewards and referrals (locked for 15 months)</li>
-              <li>• Can be traded for INR in your main wallet</li>
+              <li>• STK is AlkalineAmrit's internal cryptocurrency with a 15-month lock mechanism</li>
+              <li>• Price fluctuates based on market demand and ecosystem growth</li>
+              <li>• Can be earned through rewards and referrals (automatically locked for 15 months)</li>
+              <li>• Can be traded for INR in your main wallet (only available STK)</li>
+              <li>• Lock period ensures long-term value appreciation and ecosystem stability</li>
               <li>• 24h Trading Volume: {stkData.volume24h.toLocaleString()} STK</li>
             </ul>
           </div>
         </div>
 
-        {/* STK History */}
+        {/* STK History - Mobile Responsive */}
         <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-3 sm:p-6 w-full">
           <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">STK Transaction History</h3>
           
           <div className="overflow-x-auto">
-            <div className="min-w-[700px]">
+            <div className="min-w-[600px]">
               <table className="w-full text-xs sm:text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">

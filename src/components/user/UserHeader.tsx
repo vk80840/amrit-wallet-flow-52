@@ -17,8 +17,14 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
   const notificationTimeoutRef = useRef<NodeJS.Timeout>();
   const profileTimeoutRef = useRef<NodeJS.Timeout>();
 
+  // Auto-close functionality for notifications
   useEffect(() => {
     if (showNotifications) {
+      // Clear existing timeout
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+      }
+      // Set new timeout
       notificationTimeoutRef.current = setTimeout(() => {
         setShowNotifications(false);
       }, 5000);
@@ -30,8 +36,14 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
     };
   }, [showNotifications]);
 
+  // Auto-close functionality for profile menu
   useEffect(() => {
     if (showProfileMenu) {
+      // Clear existing timeout
+      if (profileTimeoutRef.current) {
+        clearTimeout(profileTimeoutRef.current);
+      }
+      // Set new timeout
       profileTimeoutRef.current = setTimeout(() => {
         setShowProfileMenu(false);
       }, 5000);
@@ -43,6 +55,7 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
     };
   }, [showProfileMenu]);
 
+  // Click outside to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
@@ -82,7 +95,10 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
           {/* Notifications */}
           <div className="relative" ref={notificationRef}>
             <button 
-              onClick={() => setShowNotifications(!showNotifications)}
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setShowProfileMenu(false); // Close profile menu when opening notifications
+              }}
               className="p-2 rounded-lg hover:bg-gray-100 relative"
             >
               <Bell className="w-5 h-5" />
@@ -121,7 +137,10 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
           {/* Profile Menu */}
           <div className="relative" ref={profileRef}>
             <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              onClick={() => {
+                setShowProfileMenu(!showProfileMenu);
+                setShowNotifications(false); // Close notifications when opening profile menu
+              }}
               className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100"
             >
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
