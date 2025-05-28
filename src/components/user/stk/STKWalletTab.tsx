@@ -11,20 +11,20 @@ const STKWalletTab = () => {
 
   // Mock data - will be from database
   const stkData = {
-    availableBalance: 1500, // STK that can be traded
-    lockedBalance: 1000, // STK locked for 15 months
+    availableBalance: 500, // Only purchased STK - reduced from 1500
+    lockedBalance: 2000, // Increased - all STK from rewards/purchases are locked
     totalBalance: 2500, // Total STK
     currentPrice: 0.50, // ₹0.50 per STK
-    totalValue: 1250, // Only available balance value
+    totalValue: 250, // Only available balance value (500 * 0.50)
     todayChange: +5.2,
     volume24h: 15000
   };
 
   const stkHistory = [
-    { id: 1, type: 'Buy', amount: 1000, price: 0.48, total: 480, date: '2024-01-25', status: 'Available' },
-    { id: 2, type: 'Reward', amount: 500, price: 0.50, total: 250, date: '2024-01-20', status: 'Locked', unlockDate: '2025-04-20' },
-    { id: 3, type: 'Buy', amount: 1000, price: 0.45, total: 450, date: '2024-01-15', status: 'Available' },
-    { id: 4, type: 'Referral Bonus', amount: 500, price: 0.50, total: 250, date: '2024-01-10', status: 'Locked', unlockDate: '2025-04-10' },
+    { id: 1, type: 'Buy', amount: 1000, price: 0.48, total: 480, date: '2024-01-25', status: 'Locked', unlockDate: '2025-04-25', source: 'Purchase' },
+    { id: 2, type: 'Reward', amount: 500, price: 0.50, total: 250, date: '2024-01-20', status: 'Locked', unlockDate: '2025-04-20', source: 'Salary Reward' },
+    { id: 3, type: 'Buy', amount: 500, price: 0.45, total: 225, date: '2024-01-15', status: 'Available', source: 'Purchase' },
+    { id: 4, type: 'Referral Bonus', amount: 500, price: 0.50, total: 250, date: '2024-01-10', status: 'Locked', unlockDate: '2025-04-10', source: 'Referral' },
   ];
 
   const handleTransfer = () => {
@@ -89,15 +89,16 @@ const STKWalletTab = () => {
           <div className="bg-red-50 border border-red-200 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
             <h4 className="font-semibold text-red-800 mb-2 flex items-center">
               <Lock className="w-4 h-4 mr-2" />
-              Locked STK Information (15-Month Lock Period)
+              STK Lock Policy (15-Month Lock Period)
             </h4>
             <ul className="text-xs sm:text-sm text-red-700 space-y-1">
-              <li>• All STK received from rewards, referrals, bonuses, and any other source are automatically locked for 15 months</li>
+              <li>• <strong>ALL STK from ANY source is automatically locked for 15 months</strong></li>
+              <li>• This includes STK purchased with main balance, rewards, referrals, bonuses, and any other source</li>
               <li>• Locked STK cannot be sold, transferred, or traded during the lock period</li>
               <li>• Locked STK will automatically become available after exactly 15 months from the date received</li>
-              <li>• Only purchased STK is immediately available for trading</li>
               <li>• Total Locked: {stkData.lockedBalance.toLocaleString()} STK (valued at ₹{(stkData.lockedBalance * stkData.currentPrice).toFixed(2)})</li>
-              <li>• Lock period ensures long-term commitment and stability of the STK ecosystem</li>
+              <li>• Only available STK can be traded: {stkData.availableBalance.toLocaleString()} STK</li>
+              <li>• Lock period ensures long-term commitment and ecosystem stability</li>
             </ul>
           </div>
 
@@ -123,6 +124,15 @@ const STKWalletTab = () => {
                 Sell STK
               </Button>
             </div>
+
+            {/* Updated warning for purchases */}
+            {transferType === 'buy' && (
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg mb-3">
+                <p className="text-xs sm:text-sm text-yellow-800 font-medium">
+                  ⚠️ Important: STK purchased with main balance will be locked for 15 months
+                </p>
+              </div>
+            )}
 
             <div className="space-y-3 sm:space-y-4">
               <div>
@@ -156,6 +166,12 @@ const STKWalletTab = () => {
                     <span>Total:</span>
                     <span>₹{(parseFloat(transferAmount) * stkData.currentPrice).toFixed(2)}</span>
                   </div>
+                  {transferType === 'buy' && (
+                    <div className="text-xs text-red-600 mt-1 flex items-center">
+                      <Lock className="w-3 h-3 mr-1" />
+                      Will be locked for 15 months
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -169,11 +185,12 @@ const STKWalletTab = () => {
           <div className="bg-yellow-50 border border-yellow-200 p-3 sm:p-4 rounded-lg">
             <h4 className="font-semibold text-yellow-800 mb-2 text-sm sm:text-base">STK Token Information</h4>
             <ul className="text-xs sm:text-sm text-yellow-700 space-y-1">
-              <li>• STK is AlkalineAmrit's internal cryptocurrency with a 15-month lock mechanism</li>
+              <li>• STK is AlkalineAmrit's internal cryptocurrency with a universal 15-month lock mechanism</li>
+              <li>• <strong>ALL STK from ANY source is locked for 15 months without exception</strong></li>
               <li>• Price fluctuates based on market demand and ecosystem growth</li>
               <li>• Can be earned through rewards and referrals (automatically locked for 15 months)</li>
-              <li>• Can be traded for INR in your main wallet (only available STK)</li>
-              <li>• Lock period ensures long-term value appreciation and ecosystem stability</li>
+              <li>• Can be traded for INR in your main wallet (only available/unlocked STK)</li>
+              <li>• Universal lock period ensures long-term value appreciation and ecosystem stability</li>
               <li>• 24h Trading Volume: {stkData.volume24h.toLocaleString()} STK</li>
             </ul>
           </div>
@@ -184,7 +201,7 @@ const STKWalletTab = () => {
           <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">STK Transaction History</h3>
           
           <div className="overflow-x-auto">
-            <div className="min-w-[600px]">
+            <div className="min-w-[700px]">
               <table className="w-full text-xs sm:text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">
@@ -193,6 +210,7 @@ const STKWalletTab = () => {
                     <th className="text-left p-2 sm:p-3">Price (₹)</th>
                     <th className="text-left p-2 sm:p-3">Total (₹)</th>
                     <th className="text-left p-2 sm:p-3">Status</th>
+                    <th className="text-left p-2 sm:p-3">Source</th>
                     <th className="text-left p-2 sm:p-3">Date</th>
                   </tr>
                 </thead>
@@ -225,6 +243,9 @@ const STKWalletTab = () => {
                             Unlocks: {transaction.unlockDate}
                           </div>
                         )}
+                      </td>
+                      <td className="p-2 sm:p-3">
+                        <span className="text-xs text-gray-600">{transaction.source}</span>
                       </td>
                       <td className="p-2 sm:p-3">{transaction.date}</td>
                     </tr>

@@ -1,6 +1,7 @@
-
 import { useState } from 'react';
 import { DollarSign, Calendar, TrendingUp, Lock, CheckCircle } from 'lucide-react';
+import { getUserRank, getNextRank, RANKS } from '@/utils/rankSystem';
+import RankBadge from '../rank/RankBadge';
 
 const SalaryTab = () => {
   // Mock data - will be from database
@@ -56,28 +57,57 @@ const SalaryTab = () => {
     return num.toLocaleString();
   };
 
+  // Updated eligibility check - only completed slabs count
   const eligibilityCheck = () => {
-    if (salaryData.balancedBV < 10000) {
+    const currentSlab = getCurrentSlab();
+    if (!currentSlab) {
       return {
         eligible: false,
-        message: `Need minimum 10,000 balanced BV. Current: ${formatNumber(salaryData.balancedBV)} BV`
+        message: `Need minimum 10,000 balanced BV to reach Level 1. Current: ${formatNumber(salaryData.balancedBV)} BV`
       };
     }
+    
+    // Check if user has fully completed the slab (reached the max BV for that level)
+    const isSlabCompleted = salaryData.balancedBV >= currentSlab.maxBV || currentSlab.maxBV === Infinity;
+    const completedLevel = isSlabCompleted ? currentSlab.level : currentSlab.level - 1;
+    
+    if (completedLevel < 1) {
+      return {
+        eligible: false,
+        message: `Complete Level 1 slab (${formatNumber(salarySlabs[0].maxBV)} BV) to be eligible. Current: ${formatNumber(salaryData.balancedBV)} BV`
+      };
+    }
+    
     return {
       eligible: true,
-      message: `Eligible for Level ${getCurrentSlab()?.level} salary!`
+      message: `Eligible for Level ${completedLevel} salary! Completed ${completedLevel} slab${completedLevel > 1 ? 's' : ''}.`
     };
   };
 
   const eligibility = eligibilityCheck();
   const currentSlab = getCurrentSlab();
   const nextSlab = getNextSlab();
+  
+  // Get user rank based on completed salary levels only
+  const completedSalaryLevel = eligibility.eligible ? Math.floor(salaryData.balancedBV / salarySlabs[0].minBV) : 0;
+  const userRank = getUserRank(completedSalaryLevel);
+  const nextRank = getNextRank(completedSalaryLevel);
 
   return (
     <div className="w-full max-w-full overflow-hidden">
       <div className="space-y-4 md:space-y-6">
         <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-3 md:p-6">
-          <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Monthly Salary</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6">
+            <h2 className="text-lg md:text-2xl font-bold text-gray-800 mb-2 sm:mb-0">Monthly Salary</h2>
+            <div className="flex items-center space-x-4">
+              <RankBadge rank={userRank} size="md" />
+              {nextRank && (
+                <div className="text-xs text-gray-600">
+                  Next: <RankBadge rank={nextRank} size="sm" />
+                </div>
+              )}
+            </div>
+          </div>
           
           {/* Salary Overview */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
@@ -149,6 +179,19 @@ const SalaryTab = () => {
             </div>
           </div>
 
+          {/* Rank System Information */}
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 p-3 md:p-4 rounded-lg mb-4 md:mb-6">
+            <h4 className="font-semibold text-purple-800 mb-2 text-sm md:text-base">Rank System</h4>
+            <div className="text-xs md:text-sm text-purple-700 space-y-1">
+              <p>• Your current rank: <RankBadge rank={userRank} size="sm" /></p>
+              <p>• Ranks are based on completed salary levels only</p>
+              <p>• You must fully complete each salary slab to qualify for the next rank</p>
+              {nextRank && (
+                <p>• Next rank: <RankBadge rank={nextRank} size="sm" /> (requires completing Level {nextRank.requiredSalaryLevel})</p>
+              )}
+            </div>
+          </div>
+
           {/* BV Balance */}
           <div className="bg-gray-50 p-3 md:p-4 rounded-lg mb-4 md:mb-6">
             <h4 className="font-semibold mb-3 text-sm md:text-base">BV Balance</h4>
@@ -201,48 +244,55 @@ const SalaryTab = () => {
 
         {/* Salary Slabs Table */}
         <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-3 md:p-6">
-          <h3 className="text-base md:text-xl font-bold text-gray-800 mb-4">Salary Slabs</h3>
+          <h3 className="text-base md:text-xl font-bold text-gray-800 mb-4">Salary Slabs & Ranks</h3>
           
           <div className="overflow-x-auto">
-            <div className="min-w-[500px]">
+            <div className="min-w-[600px]">
               <table className="w-full text-xs md:text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">
                     <th className="text-left p-2 md:p-3">Level</th>
                     <th className="text-left p-2 md:p-3">Balanced BV Range</th>
                     <th className="text-left p-2 md:p-3">Monthly Salary</th>
+                    <th className="text-left p-2 md:p-3">Rank</th>
                     <th className="text-left p-2 md:p-3">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {salarySlabs.map((slab) => (
-                    <tr key={slab.level} className={`border-b hover:bg-gray-50 ${
-                      currentSlab?.level === slab.level ? 'bg-blue-50' : ''
-                    }`}>
-                      <td className="p-2 md:p-3 font-medium">Level {slab.level}</td>
-                      <td className="p-2 md:p-3">
-                        {formatNumber(slab.minBV)} - {slab.maxBV === Infinity ? '∞' : formatNumber(slab.maxBV)}
-                      </td>
-                      <td className="p-2 md:p-3 font-bold">
-                        ₹{typeof slab.salary === 'number' ? slab.salary.toLocaleString() : slab.salary}
-                      </td>
-                      <td className="p-2 md:p-3">
-                        {currentSlab?.level === slab.level ? (
-                          <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                            Current
-                          </span>
-                        ) : salaryData.balancedBV >= slab.minBV ? (
-                          <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                            Achieved
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-                            Locked
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {salarySlabs.map((slab) => {
+                    const slabRank = RANKS.find(rank => rank.requiredSalaryLevel === slab.level);
+                    return (
+                      <tr key={slab.level} className={`border-b hover:bg-gray-50 ${
+                        currentSlab?.level === slab.level ? 'bg-blue-50' : ''
+                      }`}>
+                        <td className="p-2 md:p-3 font-medium">Level {slab.level}</td>
+                        <td className="p-2 md:p-3">
+                          {formatNumber(slab.minBV)} - {slab.maxBV === Infinity ? '∞' : formatNumber(slab.maxBV)}
+                        </td>
+                        <td className="p-2 md:p-3 font-bold">
+                          ₹{typeof slab.salary === 'number' ? slab.salary.toLocaleString() : slab.salary}
+                        </td>
+                        <td className="p-2 md:p-3">
+                          {slabRank && <RankBadge rank={slabRank} size="sm" />}
+                        </td>
+                        <td className="p-2 md:p-3">
+                          {currentSlab?.level === slab.level ? (
+                            <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                              Current
+                            </span>
+                          ) : salaryData.balancedBV >= slab.minBV ? (
+                            <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                              Achieved
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                              Locked
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -23,6 +23,14 @@ const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const handleNavigateToProfile = () => {
+    setActiveTab('profile');
+  };
+
+  const handleNavigateToNotifications = () => {
+    setActiveTab('announcements');
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -60,7 +68,9 @@ const UserDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 w-full overflow-x-hidden">
       <UserHeader 
         sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+        onNavigateToProfile={handleNavigateToProfile}
+        onNavigateToNotifications={handleNavigateToNotifications}
       />
       
       <div className="flex w-full">

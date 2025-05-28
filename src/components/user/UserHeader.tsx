@@ -6,9 +6,11 @@ import { useState, useEffect, useRef } from 'react';
 interface UserHeaderProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  onNavigateToProfile?: () => void;
+  onNavigateToNotifications?: () => void;
 }
 
-const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
+const UserHeader = ({ sidebarOpen, setSidebarOpen, onNavigateToProfile, onNavigateToNotifications }: UserHeaderProps) => {
   const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -75,6 +77,16 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
     };
   }, [showNotifications, showProfileMenu]);
 
+  const handleProfileClick = () => {
+    setShowProfileMenu(false);
+    onNavigateToProfile?.();
+  };
+
+  const handleNotificationsClick = () => {
+    setShowNotifications(false);
+    onNavigateToNotifications?.();
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-lg border-b border-white/20 shadow-sm z-40">
       <div className="flex items-center justify-between h-full px-4 lg:px-6">
@@ -97,7 +109,7 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
             <button 
               onClick={() => {
                 setShowNotifications(!showNotifications);
-                setShowProfileMenu(false); // Close profile menu when opening notifications
+                setShowProfileMenu(false);
               }}
               className="p-2 rounded-lg hover:bg-gray-100 relative"
             >
@@ -121,14 +133,14 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
                     <p className="text-xs text-gray-600 mt-1">Please complete your KYC verification to unlock all features.</p>
                     <p className="text-xs text-gray-400 mt-1">1 day ago</p>
                   </div>
-                  <div className="p-3 hover:bg-gray-50 rounded cursor-pointer">
-                    <p className="text-sm font-medium">New Product Available</p>
-                    <p className="text-xs text-gray-600 mt-1">Check out our latest alkaline water products in the shop.</p>
-                    <p className="text-xs text-gray-400 mt-1">3 days ago</p>
-                  </div>
                 </div>
                 <div className="p-3 border-t text-center">
-                  <button className="text-sm text-blue-600 hover:text-blue-800">View All Notifications</button>
+                  <button 
+                    onClick={handleNotificationsClick}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    View All Notifications
+                  </button>
                 </div>
               </div>
             )}
@@ -139,7 +151,7 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
             <button
               onClick={() => {
                 setShowProfileMenu(!showProfileMenu);
-                setShowNotifications(false); // Close notifications when opening profile menu
+                setShowNotifications(false);
               }}
               className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100"
             >
@@ -152,13 +164,19 @@ const UserHeader = ({ sidebarOpen, setSidebarOpen }: UserHeaderProps) => {
             {showProfileMenu && (
               <div className="absolute right-0 top-12 w-48 bg-white rounded-lg shadow-xl border z-50">
                 <div className="p-2">
-                  <button className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-lg">
+                  <button 
+                    onClick={handleProfileClick}
+                    className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-lg"
+                  >
                     <User className="w-4 h-4 text-gray-500" />
                     <span className="text-sm text-gray-700">Profile</span>
                   </button>
-                  <button className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-lg">
-                    <Settings className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-700">Settings</span>
+                  <button 
+                    onClick={handleNotificationsClick}
+                    className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-gray-50 rounded-lg"
+                  >
+                    <Bell className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-700">Notifications</span>
                   </button>
                   <hr className="my-1" />
                   <button 
