@@ -33,7 +33,18 @@ const Index = () => {
       </div>
       
       {!user ? (
-        <AuthPage />
+        <div className="relative">
+          <AuthPage />
+          {/* Admin Login Button */}
+          <div className="fixed bottom-4 right-4">
+            <button
+              onClick={() => window.location.href = '/adminpanel'}
+              className="text-sm text-gray-500 hover:text-blue-600 underline transition-colors bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm"
+            >
+              Admin Login
+            </button>
+          </div>
+        </div>
       ) : (
         <UserDashboard />
       )}

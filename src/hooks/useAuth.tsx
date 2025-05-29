@@ -39,7 +39,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setSession(session);
       if (session?.user) {
         fetchUserProfile(session.user);
+      } else {
+        setLoading(false);
       }
+    }).catch(() => {
       setLoading(false);
     });
 
@@ -50,8 +53,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         await fetchUserProfile(session.user);
       } else {
         setUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
