@@ -80,6 +80,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           userId: `ADMIN_${authUser.email?.split('@')[0]?.toUpperCase()}`
         };
         setUser(adminUser);
+        setIsAdmin(true);
+        setLoading(false);
         return;
       }
 
@@ -92,6 +94,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (error) {
         console.error('Error fetching user profile:', error);
+        setLoading(false);
         return;
       }
 
@@ -111,10 +114,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           userId: userProfile.user_id
         };
         setUser(user);
+        setIsAdmin(false);
       }
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      // Set loading to false even on error
       setLoading(false);
     }
   };
@@ -158,7 +162,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       if (authData.user) {
-        // Generate user ID (AL0001 format)
+        // Generate user ID (AU00001 format)
         const { data: existingUsers } = await supabase
           .from('users')
           .select('user_id')
@@ -172,7 +176,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           nextNumber = lastNumber + 1;
         }
 
-        const newUserId = `AL${String(nextNumber).padStart(4, '0')}`;
+        const newUserId = `AU${String(nextNumber).padStart(5, '0')}`;
 
         // Create user profile in database
         const { error: profileError } = await supabase
@@ -225,9 +229,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
+    try {
+      setLoading(true);
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
+      // Redirect to login after logout
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

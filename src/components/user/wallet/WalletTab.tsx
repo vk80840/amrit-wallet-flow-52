@@ -1,11 +1,12 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw, Users } from 'lucide-react';
+import { Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw, Users, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WalletTabProps {
   onNavigateToTab?: (tab: string) => void;
@@ -18,6 +19,10 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
   const [transferUserId, setTransferUserId] = useState('');
   const [topupAmount, setTopupAmount] = useState('');
   const [verifiedUser, setVerifiedUser] = useState<string | null>(null);
+  const [topupOption, setTopupOption] = useState<'self' | 'friend'>('self');
+  const [friendUserId, setFriendUserId] = useState('');
+  const [verifiedFriend, setVerifiedFriend] = useState<string | null>(null);
+  const [showTopupDropdown, setShowTopupDropdown] = useState(false);
 
   // Mock balances - will be from database
   const mainBalance = 12345;
@@ -30,6 +35,47 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
       toast({
         title: "User Verified",
         description: `User ID ${transferUserId} belongs to John Doe`,
+      });
+    }
+  };
+
+  const handleVerifyFriend = async () => {
+    if (!friendUserId) {
+      toast({
+        title: "Error",
+        description: "Please enter a User ID",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('name, user_id')
+        .eq('user_id', friendUserId)
+        .single();
+
+      if (error || !userData) {
+        toast({
+          title: "User Not Found",
+          description: "Please check the User ID and try again",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setVerifiedFriend(userData.name);
+      toast({
+        title: "User Verified",
+        description: `User ID ${friendUserId} belongs to ${userData.name}`,
+      });
+    } catch (error) {
+      console.error('Error verifying friend:', error);
+      toast({
+        title: "Error",
+        description: "Failed to verify user",
+        variant: "destructive"
       });
     }
   };
@@ -131,13 +177,43 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
               <span className="text-xs sm:text-sm">Withdraw</span>
             </Button>
             
-            <Button 
-              onClick={() => setActiveAction('topup')}
-              className="bg-green-500 hover:bg-green-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2"
-            >
-              <RefreshCw className="w-5 sm:w-6 h-5 sm:h-6" />
-              <span className="text-xs sm:text-sm">Top-up</span>
-            </Button>
+            <div className="relative">
+              <Button 
+                onClick={() => setShowTopupDropdown(!showTopupDropdown)}
+                className="bg-green-500 hover:bg-green-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2 w-full"
+              >
+                <div className="flex items-center space-x-1">
+                  <RefreshCw className="w-5 sm:w-6 h-5 sm:h-6" />
+                  <ChevronDown className="w-3 h-3" />
+                </div>
+                <span className="text-xs sm:text-sm">Top-up</span>
+              </Button>
+              
+              {showTopupDropdown && (
+                <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                  <button
+                    onClick={() => {
+                      setTopupOption('self');
+                      setActiveAction('topup');
+                      setShowTopupDropdown(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-t-lg"
+                  >
+                    Self
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTopupOption('friend');
+                      setActiveAction('topup');
+                      setShowTopupDropdown(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-b-lg border-t border-gray-100"
+                  >
+                    Friend
+                  </button>
+                </div>
+              )}
+            </div>
             
             <Button 
               onClick={() => setActiveAction('transfer')}
@@ -197,7 +273,31 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
           {/* Top-up Form - Mobile Responsive */}
           {activeAction === 'topup' && (
             <div className="border-t pt-4 space-y-4">
-              <h4 className="font-semibold text-sm sm:text-base">Transfer to Top-up Balance</h4>
+              <h4 className="font-semibold text-sm sm:text-base">
+                {topupOption === 'self' ? 'Transfer to Top-up Balance' : 'Transfer to Friend\'s Top-up Balance'}
+              </h4>
+              
+              {topupOption === 'friend' && (
+                <div>
+                  <Label htmlFor="friendUserId" className="text-sm">Friend's User ID</Label>
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <Input
+                      id="friendUserId"
+                      value={friendUserId}
+                      onChange={(e) => setFriendUserId(e.target.value)}
+                      placeholder="Enter Friend's User ID"
+                      className="flex-1"
+                    />
+                    <Button onClick={handleVerifyFriend} variant="outline" className="w-full sm:w-auto">
+                      Verify
+                    </Button>
+                  </div>
+                  {verifiedFriend && (
+                    <p className="text-green-600 text-sm mt-1">✓ {verifiedFriend}</p>
+                  )}
+                </div>
+              )}
+              
               <div>
                 <Label htmlFor="topupAmount" className="text-sm">Amount</Label>
                 <Input
@@ -209,10 +309,23 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
                 />
               </div>
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <Button onClick={handleTopup} className="w-full sm:w-auto">
+                <Button 
+                  onClick={handleTopup} 
+                  disabled={topupOption === 'friend' && !verifiedFriend}
+                  className="w-full sm:w-auto"
+                >
                   Transfer
                 </Button>
-                <Button onClick={() => setActiveAction(null)} variant="outline" className="w-full sm:w-auto">
+                <Button 
+                  onClick={() => {
+                    setActiveAction(null);
+                    setTopupAmount('');
+                    setFriendUserId('');
+                    setVerifiedFriend(null);
+                  }} 
+                  variant="outline" 
+                  className="w-full sm:w-auto"
+                >
                   Cancel
                 </Button>
               </div>

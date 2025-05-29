@@ -11,9 +11,11 @@ const AdminPanel = () => {
   const { user, isAdmin, loading } = useAuth();
 
   useEffect(() => {
-    // Remove loading screen immediately
-    setShowLoadingScreen(false);
-  }, []);
+    // Only show loading screen during actual auth loading
+    if (!loading) {
+      setShowLoadingScreen(false);
+    }
+  }, [loading]);
 
   // Show loading screen during initial load or auth loading
   if (showLoadingScreen || loading) {
