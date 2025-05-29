@@ -93,13 +93,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       if (userProfile) {
+        // Ensure kycStatus is properly typed
+        const kycStatus = userProfile.kyc_status as 'pending' | 'approved' | 'rejected' || 'pending';
+        
         const user: User = {
           id: userProfile.id,
           name: userProfile.name,
           email: userProfile.email,
           mobile: userProfile.mobile,
           userType: 'user',
-          kycStatus: userProfile.kyc_status,
+          kycStatus: kycStatus,
           rank: userProfile.rank,
           referralCode: userProfile.referral_code,
           userId: userProfile.user_id
