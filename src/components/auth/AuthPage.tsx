@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const AuthPage = () => {
   const { login, register } = useAuth();
@@ -28,12 +29,13 @@ const AuthPage = () => {
     name: '',
     email: '',
     mobile: '',
-    side: 'left',
-    referralCode: '',
-    sponsorName: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    referralCode: '',
+    side: 'left' as 'left' | 'right'
   });
+  const [referralUser, setReferralUser] = useState<any>(null);
+  const [isCheckingReferral, setIsCheckingReferral] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +63,33 @@ const AuthPage = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const verifyReferralCode = async (code: string) => {
+    if (!code.trim()) {
+      setReferralUser(null);
+      return;
+    }
+
+    try {
+      setIsCheckingReferral(true);
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('user_id, name, referral_code')
+        .eq('referral_code', code.trim())
+        .single();
+
+      if (error || !userData) {
+        setReferralUser(null);
+        return;
+      }
+
+      setReferralUser(userData);
+    } catch (error) {
+      setReferralUser(null);
+    } finally {
+      setIsCheckingReferral(false);
     }
   };
 
@@ -320,13 +349,13 @@ const AuthPage = () => {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <Label htmlFor="email">Email / User ID</Label>
+                  <Label htmlFor="userId">User ID</Label>
                   <Input
-                    id="email"
+                    id="userId"
                     type="text"
+                    placeholder="Enter your User ID (e.g., AU00001)"
                     value={loginData.email}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="Enter email or user ID"
+                    onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                     required
                   />
                 </div>
@@ -426,18 +455,31 @@ const AuthPage = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="referralCode">Referral Code (Optional)</Label>
-                  <Input
-                    id="referralCode"
-                    type="text"
-                    value={signupData.referralCode}
-                    onChange={(e) => handleReferralCodeChange(e.target.value)}
-                    placeholder="Enter referral code"
-                  />
-                  {signupData.sponsorName && (
-                    <p className="text-green-600 text-sm mt-1">Sponsor: {signupData.sponsorName}</p>
-                  )}
-                </div>
+                    <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+                    <Input
+                      id="referralCode"
+                      type="text"
+                      placeholder="Enter referral code"
+                      value={signupData.referralCode}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSignupData({...signupData, referralCode: value});
+                        verifyReferralCode(value);
+                      }}
+                    />
+                    {isCheckingReferral && (
+                      <p className="text-xs text-gray-500 mt-1">Checking referral code...</p>
+                    )}
+                    {referralUser && (
+                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs">
+                        <p className="text-green-800 font-medium">Valid referral from:</p>
+                        <p className="text-green-700">{referralUser.name} ({referralUser.user_id})</p>
+                      </div>
+                    )}
+                    {signupData.referralCode && !referralUser && !isCheckingReferral && (
+                      <p className="text-xs text-red-500 mt-1">Invalid referral code</p>
+                    )}
+                  </div>
 
                 <div>
                   <Label htmlFor="signupPassword">Password</Label>

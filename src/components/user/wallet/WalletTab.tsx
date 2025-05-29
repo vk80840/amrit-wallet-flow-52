@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw, Users, ChevronDown } from 'lucide-react';
@@ -18,11 +17,12 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
   const [transferAmount, setTransferAmount] = useState('');
   const [transferUserId, setTransferUserId] = useState('');
   const [topupAmount, setTopupAmount] = useState('');
-  const [verifiedUser, setVerifiedUser] = useState<string | null>(null);
+  const [verifiedUser, setVerifiedUser] = useState<any>(null);
   const [topupOption, setTopupOption] = useState<'self' | 'friend'>('self');
   const [friendUserId, setFriendUserId] = useState('');
   const [verifiedFriend, setVerifiedFriend] = useState<string | null>(null);
   const [showTopupDropdown, setShowTopupDropdown] = useState(false);
+  const [searchUserId, setSearchUserId] = useState('');
 
   // Mock balances - will be from database
   const mainBalance = 12345;
@@ -90,23 +90,23 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
       });
       return;
     }
-    
+
     // Calculate charges: 6% + 2% TDS
     const charges = amount * 0.08;
     const finalAmount = amount + charges;
-    
+
     toast({
       title: "Transfer Initiated",
       description: `₹${amount} + ₹${charges.toFixed(2)} charges = ₹${finalAmount.toFixed(2)} total`,
     });
-    
+
     setActiveAction(null);
     setTransferAmount('');
     setTransferUserId('');
     setVerifiedUser(null);
   };
 
-  const handleTopup = () => {
+  const handleTopup = async () => {
     const amount = parseFloat(topupAmount);
     if (amount < 100) {
       toast({
@@ -116,12 +116,12 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
       });
       return;
     }
-    
+
     toast({
       title: "Top-up Successful",
       description: `₹${amount} transferred to top-up balance`,
     });
-    
+
     setActiveAction(null);
     setTopupAmount('');
   };
@@ -145,7 +145,7 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
             <h3 className="text-base sm:text-lg font-semibold mb-2">Main Balance</h3>
             <p className="text-2xl sm:text-3xl font-bold">₹{mainBalance.toLocaleString()}</p>
           </div>
-          
+
           <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 sm:p-6 rounded-xl">
             <div className="flex items-center justify-between mb-4">
               <Wallet className="w-6 sm:w-8 h-6 sm:h-8" />
@@ -159,7 +159,7 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
         {/* Action Buttons - Mobile Responsive */}
         <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-4 sm:p-6">
           <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
-          
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
             <Button 
               onClick={() => onNavigateToTab?.('deposit')}
@@ -168,7 +168,7 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
               <ArrowDownLeft className="w-5 sm:w-6 h-5 sm:h-6" />
               <span className="text-xs sm:text-sm">Deposit</span>
             </Button>
-            
+
             <Button 
               onClick={() => onNavigateToTab?.('withdraw')}
               className="bg-red-500 hover:bg-red-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2"
@@ -176,7 +176,7 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
               <ArrowUpRight className="w-5 sm:w-6 h-5 sm:h-6" />
               <span className="text-xs sm:text-sm">Withdraw</span>
             </Button>
-            
+
             <div className="relative">
               <Button 
                 onClick={() => setShowTopupDropdown(!showTopupDropdown)}
@@ -188,7 +188,7 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
                 </div>
                 <span className="text-xs sm:text-sm">Top-up</span>
               </Button>
-              
+
               {showTopupDropdown && (
                 <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                   <button
@@ -214,7 +214,7 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
                 </div>
               )}
             </div>
-            
+
             <Button 
               onClick={() => setActiveAction('transfer')}
               className="bg-purple-500 hover:bg-purple-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2"
@@ -276,7 +276,7 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
               <h4 className="font-semibold text-sm sm:text-base">
                 {topupOption === 'self' ? 'Transfer to Top-up Balance' : 'Transfer to Friend\'s Top-up Balance'}
               </h4>
-              
+
               {topupOption === 'friend' && (
                 <div>
                   <Label htmlFor="friendUserId" className="text-sm">Friend's User ID</Label>
@@ -297,7 +297,7 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
                   )}
                 </div>
               )}
-              
+
               <div>
                 <Label htmlFor="topupAmount" className="text-sm">Amount</Label>
                 <Input
@@ -336,7 +336,7 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
         {/* Transaction History - Mobile Responsive */}
         <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-4 sm:p-6">
           <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Transaction History</h3>
-          
+
           <div className="overflow-x-auto">
             <div className="min-w-[400px]">
               <table className="w-full text-xs sm:text-sm">

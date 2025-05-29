@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { User, Mail, Phone, IdCard, Copy, Star, Calendar, TrendingUp, Users, ShoppingBag, DollarSign, Award } from 'lucide-react';
 import { useState } from 'react';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 const DashboardContent = () => {
   const { user } = useAuth();
-  
+
   // Mock user data with salary level (BV completed slabs)
   const mockUserData = {
     salaryLevel: 3, // User has completed 3 salary slabs
@@ -121,7 +120,7 @@ const DashboardContent = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between">
               <div>
@@ -141,7 +140,7 @@ const DashboardContent = () => {
                     {currentRank.name} Rank
                   </span>
                 </div>
-                
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm text-gray-600">
                   <div className="flex items-center space-x-2">
                     <Mail className="w-4 h-4 text-blue-500" />
@@ -173,7 +172,7 @@ const DashboardContent = () => {
           <p className="text-3xl font-bold">₹8,250</p>
           <p className="text-blue-100 text-sm mt-1">Available for shopping</p>
         </div>
-        
+
         <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg">
           <h3 className="text-lg font-semibold mb-2">Main Balance</h3>
           <p className="text-3xl font-bold">₹12,345</p>
@@ -199,7 +198,7 @@ const DashboardContent = () => {
       {/* Salary Rank Progress */}
       <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
         <h3 className="text-xl font-bold text-gray-800 mb-4">Salary Rank Progress</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Current Rank */}
           <div className="text-center p-6 rounded-lg border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-green-50">
@@ -253,7 +252,7 @@ const DashboardContent = () => {
           <Copy className="w-5 h-5 mr-2 text-blue-500" />
           Referral Information
         </h3>
-        
+
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border">
             <span className="text-gray-700 font-medium">Referral Code:</span>
@@ -266,7 +265,7 @@ const DashboardContent = () => {
               </button>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border">
               <span className="text-gray-700 text-sm font-medium">Left Referral Link:</span>
@@ -279,7 +278,7 @@ const DashboardContent = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border">
               <span className="text-gray-700 text-sm font-medium">Right Referral Link:</span>
               <div className="flex items-center justify-between mt-2">

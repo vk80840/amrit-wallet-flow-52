@@ -19,8 +19,7 @@ interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
   session: Session | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (userId: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (userData: any) => Promise<boolean>;
 }
@@ -28,7 +27,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -115,12 +113,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (userId: string, password: string): Promise<boolean> => {
     try {
-      setLoading(true);
+      // First find the user by user_id to get their email
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('user_id', userId)
+        .single();
+
+      if (userError || !userData) {
+        console.error('User not found with this User ID');
+        return false;
+      }
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: userData.email,
         password,
       });
 
@@ -133,14 +141,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Login error:', error);
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
   const register = async (userData: any): Promise<boolean> => {
     try {
-      setLoading(true);
 
       // First create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -215,8 +220,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Registration error:', error);
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -238,7 +241,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       user,
       isAdmin: user?.userType === 'admin',
       session,
-      loading,
       login,
       logout,
       register
