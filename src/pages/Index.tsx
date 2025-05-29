@@ -1,30 +1,15 @@
 
-import { useState, useEffect } from 'react';
-import LoadingScreen from '@/components/LoadingScreen';
 import AuthPage from '@/components/auth/AuthPage';
 import UserDashboard from '@/components/user/UserDashboard';
 import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
-  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
-  const { user, isAdmin, loading } = useAuth();
-
-  useEffect(() => {
-    // Only show loading screen during actual auth loading
-    if (!loading) {
-      setShowLoadingScreen(false);
-    }
-  }, [loading]);
-
-  // Show loading screen during initial load or auth loading
-  if (showLoadingScreen || loading) {
-    return <LoadingScreen />;
-  }
+  const { user, isAdmin } = useAuth();
 
   // If user is admin, redirect to admin panel
   if (isAdmin && user) {
     window.location.href = '/adminpanel';
-    return <LoadingScreen />;
+    return null;
   }
 
   return (

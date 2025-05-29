@@ -1,26 +1,11 @@
 
-import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import LoadingScreen from '@/components/LoadingScreen';
 import AuthPage from '@/components/auth/AuthPage';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 
 const AdminPanel = () => {
-  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
-  const { user, isAdmin, loading } = useAuth();
-
-  useEffect(() => {
-    // Only show loading screen during actual auth loading
-    if (!loading) {
-      setShowLoadingScreen(false);
-    }
-  }, [loading]);
-
-  // Show loading screen during initial load or auth loading
-  if (showLoadingScreen || loading) {
-    return <LoadingScreen />;
-  }
+  const { user, isAdmin } = useAuth();
 
   // If user is logged in but not admin, redirect to main app
   if (user && !isAdmin) {

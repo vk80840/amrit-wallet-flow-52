@@ -28,7 +28,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -39,11 +39,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setSession(session);
       if (session?.user) {
         fetchUserProfile(session.user);
-      } else {
-        setLoading(false);
       }
-    }).catch(() => {
-      setLoading(false);
     });
 
     // Listen for auth changes
@@ -53,7 +49,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         await fetchUserProfile(session.user);
       } else {
         setUser(null);
-        setLoading(false);
+        setIsAdmin(false);
       }
     });
 
@@ -81,7 +77,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         setUser(adminUser);
         setIsAdmin(true);
-        setLoading(false);
         return;
       }
 
@@ -94,7 +89,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (error) {
         console.error('Error fetching user profile:', error);
-        setLoading(false);
         return;
       }
 
@@ -116,10 +110,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(user);
         setIsAdmin(false);
       }
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      setLoading(false);
     }
   };
 
@@ -230,7 +222,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      setLoading(true);
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
@@ -239,8 +230,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
