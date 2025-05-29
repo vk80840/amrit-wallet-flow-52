@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Users, DollarSign, FileText, Download, UserCheck, UserPlus, ShoppingCart, Coins, Bell, TrendingUp, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -65,7 +64,7 @@ const DashboardOverview = () => {
         .eq('status', 'completed')
         .in('type', ['commission', 'purchase']);
 
-      const totalEarnings = earningsData?.reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+      const totalEarnings = earningsData?.reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0) || 0;
 
       // Fetch total STK balance
       const { data: stkData } = await supabase
@@ -79,11 +78,11 @@ const DashboardOverview = () => {
         totalEarnings,
         pendingKYC: pendingKYC || 0,
         pendingWithdrawals: pendingWithdrawals || 0,
-        activeUsersToday: totalUsers || 0, // For now, assume all users are active
+        activeUsersToday: totalUsers || 0,
         newSignupsToday: newSignupsToday || 0,
         totalOrders: totalOrders || 0,
         totalSTKBalance,
-        adminSTKBalance: 0 // Will be calculated based on admin logic
+        adminSTKBalance: 0
       });
 
       // Fetch recent activity (recent transactions)
