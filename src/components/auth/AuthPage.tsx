@@ -38,7 +38,7 @@ const AuthPage = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       const success = await login(loginData.email, loginData.password);
       if (success) {
@@ -66,7 +66,7 @@ const AuthPage = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (signupData.password !== signupData.confirmPassword) {
       toast({
         title: "Password Mismatch",
@@ -86,7 +86,7 @@ const AuthPage = () => {
     }
 
     setIsLoading(true);
-    
+
     try {
       const success = await register(signupData);
       if (success) {
@@ -153,7 +153,7 @@ const AuthPage = () => {
           setIsLoading(false);
           return;
         }
-        
+
         // Mock password reset
         setTimeout(() => {
           toast({
@@ -182,7 +182,7 @@ const AuthPage = () => {
 
   const handleReferralCodeChange = (code: string) => {
     setSignupData(prev => ({ ...prev, referralCode: code }));
-    
+
     // Mock sponsor name lookup
     if (code) {
       setTimeout(() => {
@@ -219,7 +219,7 @@ const AuthPage = () => {
               {forgotPasswordStep === 'password' && 'Set your new password'}
             </p>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
               {forgotPasswordStep === 'email' && (
@@ -235,7 +235,7 @@ const AuthPage = () => {
                   />
                 </div>
               )}
-              
+
               {forgotPasswordStep === 'otp' && (
                 <div>
                   <Label htmlFor="otp">OTP</Label>
@@ -253,7 +253,7 @@ const AuthPage = () => {
                   </p>
                 </div>
               )}
-              
+
               {forgotPasswordStep === 'password' && (
                 <>
                   <div>
@@ -267,7 +267,7 @@ const AuthPage = () => {
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
                     <Input
@@ -281,7 +281,7 @@ const AuthPage = () => {
                   </div>
                 </>
               )}
-              
+
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600"
@@ -309,14 +309,14 @@ const AuthPage = () => {
           <CardTitle className="text-2xl font-bold text-gray-800">AlkalineAmrit</CardTitle>
           <p className="text-gray-600">Making water alkaline...</p>
         </CardHeader>
-        
+
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
@@ -330,7 +330,7 @@ const AuthPage = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="password">Password</Label>
                   <Input
@@ -342,7 +342,7 @@ const AuthPage = () => {
                     required
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <input
@@ -354,7 +354,7 @@ const AuthPage = () => {
                     />
                     <Label htmlFor="rememberMe" className="text-sm">Remember Me</Label>
                   </div>
-                  
+
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
@@ -363,7 +363,7 @@ const AuthPage = () => {
                     Forgot Password?
                   </button>
                 </div>
-                
+
                 <Button 
                   type="submit" 
                   className="w-full bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600"
@@ -373,7 +373,7 @@ const AuthPage = () => {
                 </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div>
@@ -387,7 +387,7 @@ const AuthPage = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="signupEmail">Email</Label>
                   <Input
@@ -399,7 +399,7 @@ const AuthPage = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="mobile">Mobile</Label>
                   <Input
@@ -411,7 +411,7 @@ const AuthPage = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="side">Side</Label>
                   <select 
@@ -424,7 +424,7 @@ const AuthPage = () => {
                     <option value="right">Right</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="referralCode">Referral Code (Optional)</Label>
                   <Input
@@ -438,7 +438,7 @@ const AuthPage = () => {
                     <p className="text-green-600 text-sm mt-1">Sponsor: {signupData.sponsorName}</p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="signupPassword">Password</Label>
                   <Input
@@ -450,7 +450,7 @@ const AuthPage = () => {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <Input
@@ -462,7 +462,7 @@ const AuthPage = () => {
                     required
                   />
                 </div>
-                
+
                 <Button 
                   type="submit" 
                   className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
@@ -474,6 +474,15 @@ const AuthPage = () => {
             </TabsContent>
           </Tabs>
         </CardContent>
+        {/* Admin Login Button */}
+        <div className="text-center mt-4">
+          <button
+            onClick={() => window.location.href = '/adminpanel'}
+            className="text-sm text-gray-500 hover:text-orange-600 underline transition-colors"
+          >
+            Admin Login
+          </button>
+        </div>
       </Card>
     </div>
   );

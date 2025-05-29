@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
@@ -29,9 +28,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Get initial session
@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (userProfile) {
         // Ensure kycStatus is properly typed
         const kycStatus = userProfile.kyc_status as 'pending' | 'approved' | 'rejected' || 'pending';
-        
+
         const user: User = {
           id: userProfile.id,
           name: userProfile.name,
@@ -110,14 +110,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(user);
       }
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      console.error('Error fetching user profile:', error);
+      // Set loading to false even on error
+      setLoading(false);
     }
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
