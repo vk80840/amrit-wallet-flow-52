@@ -1,237 +1,221 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
-interface User {
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
+
+interface UserProfile {
   id: string;
+  user_id: string;
   name: string;
   email: string;
   mobile: string;
-  userType: 'user' | 'admin';
-  profilePicture?: string;
-  kycStatus: 'pending' | 'approved' | 'rejected';
+  kyc_status: string;
   rank: string;
-  referralCode: string;
-  userId: string;
+  referral_code: string;
+  sponsor_id: string;
+  side: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  isAdmin: boolean;
+  userProfile: UserProfile | null;
   session: Session | null;
-  login: (userId: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  register: (userData: any) => Promise<boolean>;
+  loading: boolean;
+  login: (userIdOrEmail: string, password: string) => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+interface RegisterData {
+  user_id: string;
+  name: string;
+  email: string;
+  mobile: string;
+  password: string;
+  referral_code?: string;
+  side?: 'left' | 'right';
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchUserProfile = async (user: User) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', user.email)
+        .single();
+
+      if (error) throw error;
+      setUserProfile(profile);
+      
+      // Store in localStorage for persistence
+      localStorage.setItem('userProfile', JSON.stringify(profile));
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const generateUserId = async () => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('user_id')
+      .order('user_id', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      const lastUserId = data[0].user_id;
+      const numericPart = parseInt(lastUserId.substring(2)) + 1;
+      return `AU${numericPart.toString().padStart(5, '0')}`;
+    } else {
+      return 'AU00001';
+    }
+  };
 
   useEffect(() => {
-    // Get initial session
+    // Check for stored session
+    const storedProfile = localStorage.getItem('userProfile');
+    if (storedProfile) {
+      setUserProfile(JSON.parse(storedProfile));
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) {
+      setUser(session?.user ?? null);
+      if (session?.user && !userProfile) {
         fetchUserProfile(session.user);
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
-      if (session?.user) {
+      setUser(session?.user ?? null);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
         await fetchUserProfile(session.user);
-      } else {
-        setUser(null);
-        setIsAdmin(false);
+      } else if (event === 'SIGNED_OUT') {
+        setUserProfile(null);
+        localStorage.removeItem('userProfile');
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserProfile = async (authUser: SupabaseUser) => {
+  const login = async (userIdOrEmail: string, password: string) => {
+    setLoading(true);
     try {
-      // Check if this is an admin user (predefined admin emails)
-      const adminEmails = ['neeraj@alkalineamrit.com', 'vansh@alkalineamrit.com', 'deepanshu@alkalineamrit.com', 'admin@alkalineamrit.com'];
-      const isAdmin = adminEmails.includes(authUser.email || '');
+      let email = userIdOrEmail;
+      
+      // Check if input is user_id format (AU00001)
+      if (userIdOrEmail.match(/^AU\d{5}$/)) {
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('email')
+          .eq('user_id', userIdOrEmail)
+          .single();
 
-      if (isAdmin) {
-        // Create admin user object
-        const adminUser: User = {
-          id: authUser.id,
-          name: authUser.email?.split('@')[0]?.charAt(0).toUpperCase() + authUser.email?.split('@')[0]?.slice(1) || 'Admin',
-          email: authUser.email || '',
-          mobile: '+91-9999999999',
-          userType: 'admin',
-          kycStatus: 'approved',
-          rank: 'admin',
-          referralCode: `ADMIN_${authUser.email?.split('@')[0]?.toUpperCase()}`,
-          userId: `ADMIN_${authUser.email?.split('@')[0]?.toUpperCase()}`
-        };
-        setUser(adminUser);
-        setIsAdmin(true);
-        return;
+        if (userError || !userData) {
+          throw new Error('User ID not found');
+        }
+        email = userData.email;
       }
 
-      // Fetch regular user profile from database
-      const { data: userProfile, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', authUser.email)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
-
-      if (userProfile) {
-        // Ensure kycStatus is properly typed
-        const kycStatus = userProfile.kyc_status as 'pending' | 'approved' | 'rejected' || 'pending';
-
-        const user: User = {
-          id: userProfile.id,
-          name: userProfile.name,
-          email: userProfile.email,
-          mobile: userProfile.mobile,
-          userType: 'user',
-          kycStatus: kycStatus,
-          rank: userProfile.rank,
-          referralCode: userProfile.referral_code,
-          userId: userProfile.user_id
-        };
-        setUser(user);
-        setIsAdmin(false);
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
-
-  const login = async (userId: string, password: string): Promise<boolean> => {
-    try {
-      // First find the user by user_id to get their email
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('email')
-        .eq('user_id', userId)
-        .single();
-
-      if (userError || !userData) {
-        console.error('User not found with this User ID');
-        return false;
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: userData.email,
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
         password,
       });
 
-      if (error) {
-        console.error('Login error:', error.message);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Login error:', error);
-      return false;
+      if (error) throw error;
+    } catch (error: any) {
+      throw new Error(error.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const register = async (userData: any): Promise<boolean> => {
+  const register = async (userData: RegisterData) => {
+    setLoading(true);
     try {
-
-      // First create auth user
+      const userId = await generateUserId();
+      
+      // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
       });
 
-      if (authError) {
-        console.error('Auth registration error:', authError.message);
-        return false;
-      }
+      if (authError) throw authError;
 
-      if (authData.user) {
-        // Generate user ID (AU00001 format)
-        const { data: existingUsers } = await supabase
-          .from('users')
-          .select('user_id')
-          .order('created_at', { ascending: false })
-          .limit(1);
+      // Create user profile
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user?.id,
+          user_id: userId,
+          name: userData.name,
+          email: userData.email,
+          mobile: userData.mobile,
+          referral_code: `REF${userId}`,
+          sponsor_id: userData.referral_code,
+          side: userData.side || 'left',
+          kyc_status: 'pending',
+          rank: 'Associate',
+          is_active: true,
+        });
 
-        let nextNumber = 1;
-        if (existingUsers && existingUsers.length > 0) {
-          const lastUserId = existingUsers[0].user_id;
-          const lastNumber = parseInt(lastUserId.substring(2));
-          nextNumber = lastNumber + 1;
-        }
+      if (profileError) throw profileError;
 
-        const newUserId = `AU${String(nextNumber).padStart(5, '0')}`;
+      // Create wallet
+      await supabase.from('wallets').insert({
+        user_id: authData.user?.id,
+        main_balance: 0,
+        topup_balance: 0,
+      });
 
-        // Create user profile in database
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id,
-            user_id: newUserId,
-            email: userData.email,
-            password_hash: 'managed_by_supabase_auth', // Placeholder since Supabase handles this
-            name: userData.name,
-            mobile: userData.mobile,
-            referral_code: `REF${String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0')}`,
-            side: userData.side,
-            rank: 'Bronze',
-            kyc_status: 'pending'
-          });
+      // Create STK wallet
+      await supabase.from('stk_wallets').insert({
+        user_id: authData.user?.id,
+        total_balance: 0,
+        locked_balance: 0,
+        unlocked_balance: 0,
+      });
 
-        if (profileError) {
-          console.error('Profile creation error:', profileError.message);
-          return false;
-        }
-
-        // Create wallet for the user
-        await supabase
-          .from('wallets')
-          .insert({
-            user_id: authData.user.id,
-            main_balance: 0.00,
-            topup_balance: 0.00
-          });
-
-        // Create STK wallet for the user
-        await supabase
-          .from('stk_wallets')
-          .insert({
-            user_id: authData.user.id,
-            total_balance: 0,
-            locked_balance: 0,
-            unlocked_balance: 0
-          });
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Registration error:', error);
-      return false;
+    } catch (error: any) {
+      throw new Error(error.message || 'Registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
       setUser(null);
+      setUserProfile(null);
       setSession(null);
-      setIsAdmin(false);
-      // Redirect to login after logout
-      window.location.href = '/';
-    } catch (error) {
+      localStorage.removeItem('userProfile');
+    } catch (error: any) {
       console.error('Logout error:', error);
     }
   };
@@ -239,21 +223,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   return (
     <AuthContext.Provider value={{
       user,
-      isAdmin: user?.userType === 'admin',
+      userProfile,
       session,
+      loading,
       login,
+      register,
       logout,
-      register
     }}>
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

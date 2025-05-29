@@ -1,109 +1,114 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw, Users, ChevronDown } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { Wallet, CreditCard, ArrowUpRight, ArrowDownLeft, RefreshCw, Send } from 'lucide-react';
 
-interface WalletTabProps {
-  onNavigateToTab?: (tab: string) => void;
+interface WalletData {
+  main_balance: number;
+  topup_balance: number;
 }
 
-const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
-  const { user } = useAuth();
+interface Transaction {
+  id: string;
+  type: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  description?: string;
+}
+
+const WalletTab = () => {
+  const { userProfile } = useAuth();
+  const [walletData, setWalletData] = useState<WalletData>({ main_balance: 0, topup_balance: 0 });
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeAction, setActiveAction] = useState<string | null>(null);
-  const [transferAmount, setTransferAmount] = useState('');
-  const [transferUserId, setTransferUserId] = useState('');
+  
+  // Form states
   const [topupAmount, setTopupAmount] = useState('');
-  const [verifiedUser, setVerifiedUser] = useState<any>(null);
-  const [topupOption, setTopupOption] = useState<'self' | 'friend'>('self');
-  const [friendUserId, setFriendUserId] = useState('');
-  const [verifiedFriend, setVerifiedFriend] = useState<string | null>(null);
-  const [showTopupDropdown, setShowTopupDropdown] = useState(false);
-  const [searchUserId, setSearchUserId] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [recipientUserId, setRecipientUserId] = useState('');
+  const [verifiedRecipient, setVerifiedRecipient] = useState<any>(null);
 
-  // Mock balances - will be from database
-  const mainBalance = 12345;
-  const topupBalance = 8250;
+  useEffect(() => {
+    if (userProfile?.id) {
+      fetchWalletData();
+      fetchTransactions();
+    }
+  }, [userProfile]);
 
-  const handleVerifyUser = () => {
-    // Mock verification - will connect to database
-    if (transferUserId) {
-      setVerifiedUser('John Doe'); // Mock verified user name
-      toast({
-        title: "User Verified",
-        description: `User ID ${transferUserId} belongs to John Doe`,
-      });
+  const fetchWalletData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('main_balance, topup_balance')
+        .eq('user_id', userProfile?.id)
+        .single();
+
+      if (error) throw error;
+      setWalletData(data || { main_balance: 0, topup_balance: 0 });
+    } catch (error) {
+      console.error('Error fetching wallet data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleVerifyFriend = async () => {
-    if (!friendUserId) {
-      toast({
-        title: "Error",
-        description: "Please enter a User ID",
-        variant: "destructive"
-      });
-      return;
+  const fetchTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', userProfile?.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setTransactions(data || []);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
     }
+  };
+
+  const verifyRecipient = async () => {
+    if (!recipientUserId) return;
 
     try {
-      const { data: userData, error } = await supabase
+      const { data, error } = await supabase
         .from('users')
-        .select('name, user_id')
-        .eq('user_id', friendUserId)
+        .select('user_id, name')
+        .eq('user_id', recipientUserId)
         .single();
 
-      if (error || !userData) {
+      if (error || !data) {
         toast({
-          title: "User Not Found",
-          description: "Please check the User ID and try again",
+          title: "Error",
+          description: "User ID not found",
           variant: "destructive"
         });
         return;
       }
 
-      setVerifiedFriend(userData.name);
+      setVerifiedRecipient(data);
       toast({
         title: "User Verified",
-        description: `User ID ${friendUserId} belongs to ${userData.name}`,
+        description: `Recipient: ${data.name}`,
       });
     } catch (error) {
-      console.error('Error verifying friend:', error);
       toast({
         title: "Error",
         description: "Failed to verify user",
         variant: "destructive"
       });
     }
-  };
-
-  const handleTransfer = () => {
-    const amount = parseFloat(transferAmount);
-    if (amount < 100) {
-      toast({
-        title: "Error",
-        description: "Minimum transfer amount is ₹100",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Calculate charges: 6% + 2% TDS
-    const charges = amount * 0.08;
-    const finalAmount = amount + charges;
-
-    toast({
-      title: "Transfer Initiated",
-      description: `₹${amount} + ₹${charges.toFixed(2)} charges = ₹${finalAmount.toFixed(2)} total`,
-    });
-
-    setActiveAction(null);
-    setTransferAmount('');
-    setTransferUserId('');
-    setVerifiedUser(null);
   };
 
   const handleTopup = async () => {
@@ -117,260 +122,298 @@ const WalletTab = ({ onNavigateToTab }: WalletTabProps) => {
       return;
     }
 
-    toast({
-      title: "Top-up Successful",
-      description: `₹${amount} transferred to top-up balance`,
-    });
+    if (amount > walletData.main_balance) {
+      toast({
+        title: "Error",
+        description: "Insufficient main balance",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    setActiveAction(null);
-    setTopupAmount('');
+    try {
+      const { error } = await supabase
+        .from('wallets')
+        .update({
+          main_balance: walletData.main_balance - amount,
+          topup_balance: walletData.topup_balance + amount
+        })
+        .eq('user_id', userProfile?.id);
+
+      if (error) throw error;
+
+      // Record transaction
+      await supabase.from('transactions').insert({
+        user_id: userProfile?.id,
+        type: 'topup',
+        amount: amount,
+        status: 'completed',
+        description: 'Transfer to top-up balance'
+      });
+
+      toast({
+        title: "Top-up Successful",
+        description: `₹${amount} transferred to top-up balance`,
+      });
+
+      fetchWalletData();
+      fetchTransactions();
+      setActiveAction(null);
+      setTopupAmount('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Transfer failed",
+        variant: "destructive"
+      });
+    }
   };
 
-  const transactions = [
-    { id: 1, type: 'Deposit', amount: 5000, status: 'Completed', date: '2024-01-15' },
-    { id: 2, type: 'Withdraw', amount: -2000, status: 'Pending', date: '2024-01-14' },
-    { id: 3, type: 'Transfer', amount: -500, status: 'Completed', date: '2024-01-13' },
-  ];
+  const handleTransfer = async () => {
+    if (!verifiedRecipient) return;
+
+    const amount = parseFloat(transferAmount);
+    const taxAmount = amount * 0.08; // 8% tax
+    const totalDeduction = amount + taxAmount;
+
+    if (totalDeduction > walletData.main_balance) {
+      toast({
+        title: "Error",
+        description: "Insufficient balance (including 8% tax)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Deduct from sender
+      const { error: senderError } = await supabase
+        .from('wallets')
+        .update({
+          main_balance: walletData.main_balance - totalDeduction
+        })
+        .eq('user_id', userProfile?.id);
+
+      if (senderError) throw senderError;
+
+      // Add to recipient
+      const { data: recipientWallet, error: recipientError } = await supabase
+        .from('wallets')
+        .select('main_balance')
+        .eq('user_id', (await supabase.from('users').select('id').eq('user_id', recipientUserId).single()).data?.id)
+        .single();
+
+      if (recipientError) throw recipientError;
+
+      await supabase
+        .from('wallets')
+        .update({
+          main_balance: recipientWallet.main_balance + amount
+        })
+        .eq('user_id', (await supabase.from('users').select('id').eq('user_id', recipientUserId).single()).data?.id);
+
+      // Record transactions
+      await supabase.from('transactions').insert([
+        {
+          user_id: userProfile?.id,
+          type: 'transfer_out',
+          amount: -totalDeduction,
+          status: 'completed',
+          description: `Transfer to ${verifiedRecipient.name} (${recipientUserId}) + 8% tax`
+        },
+        {
+          user_id: (await supabase.from('users').select('id').eq('user_id', recipientUserId).single()).data?.id,
+          type: 'transfer_in',
+          amount: amount,
+          status: 'completed',
+          description: `Transfer from ${userProfile?.name} (${userProfile?.user_id})`
+        }
+      ]);
+
+      toast({
+        title: "Transfer Successful",
+        description: `₹${amount} sent to ${verifiedRecipient.name}`,
+      });
+
+      fetchWalletData();
+      fetchTransactions();
+      setActiveAction(null);
+      setTransferAmount('');
+      setRecipientUserId('');
+      setVerifiedRecipient(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Transfer failed",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center p-8">Loading wallet...</div>;
+  }
 
   return (
-    <div className="w-full max-w-full overflow-hidden">
-      <div className="space-y-4 sm:space-y-6">
-        {/* Balance Cards - Mobile Responsive */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 sm:p-6 rounded-xl">
-            <div className="flex items-center justify-between mb-4">
-              <Wallet className="w-6 sm:w-8 h-6 sm:h-8" />
-              <span className="text-blue-100 text-xs sm:text-sm">Withdrawable</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold mb-2">Main Balance</h3>
-            <p className="text-2xl sm:text-3xl font-bold">₹{mainBalance.toLocaleString()}</p>
-          </div>
+    <div className="space-y-6 p-4 sm:p-6">
+      {/* Balance Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Main Balance</span>
+              <Wallet className="w-6 h-6" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">₹{walletData.main_balance.toLocaleString()}</p>
+            <p className="text-blue-100 text-sm">Withdrawable</p>
+          </CardContent>
+        </Card>
 
-          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 sm:p-6 rounded-xl">
-            <div className="flex items-center justify-between mb-4">
-              <Wallet className="w-6 sm:w-8 h-6 sm:h-8" />
-              <span className="text-green-100 text-xs sm:text-sm">Shopping</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold mb-2">Top-up Balance</h3>
-            <p className="text-2xl sm:text-3xl font-bold">₹{topupBalance.toLocaleString()}</p>
-          </div>
-        </div>
-
-        {/* Action Buttons - Mobile Responsive */}
-        <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-4 sm:p-6">
-          <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Quick Actions</h3>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-            <Button 
-              onClick={() => onNavigateToTab?.('deposit')}
-              className="bg-blue-500 hover:bg-blue-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2"
-            >
-              <ArrowDownLeft className="w-5 sm:w-6 h-5 sm:h-6" />
-              <span className="text-xs sm:text-sm">Deposit</span>
-            </Button>
-
-            <Button 
-              onClick={() => onNavigateToTab?.('withdraw')}
-              className="bg-red-500 hover:bg-red-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2"
-            >
-              <ArrowUpRight className="w-5 sm:w-6 h-5 sm:h-6" />
-              <span className="text-xs sm:text-sm">Withdraw</span>
-            </Button>
-
-            <div className="relative">
-              <Button 
-                onClick={() => setShowTopupDropdown(!showTopupDropdown)}
-                className="bg-green-500 hover:bg-green-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2 w-full"
-              >
-                <div className="flex items-center space-x-1">
-                  <RefreshCw className="w-5 sm:w-6 h-5 sm:h-6" />
-                  <ChevronDown className="w-3 h-3" />
-                </div>
-                <span className="text-xs sm:text-sm">Top-up</span>
-              </Button>
-
-              {showTopupDropdown && (
-                <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                  <button
-                    onClick={() => {
-                      setTopupOption('self');
-                      setActiveAction('topup');
-                      setShowTopupDropdown(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-t-lg"
-                  >
-                    Self
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTopupOption('friend');
-                      setActiveAction('topup');
-                      setShowTopupDropdown(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-b-lg border-t border-gray-100"
-                  >
-                    Friend
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <Button 
-              onClick={() => setActiveAction('transfer')}
-              className="bg-purple-500 hover:bg-purple-600 text-white p-3 sm:p-4 h-auto flex-col space-y-2"
-            >
-              <Users className="w-5 sm:w-6 h-5 sm:h-6" />
-              <span className="text-xs sm:text-sm">Transfer</span>
-            </Button>
-          </div>
-
-          {/* Transfer Form - Mobile Responsive */}
-          {activeAction === 'transfer' && (
-            <div className="border-t pt-4 space-y-4">
-              <h4 className="font-semibold text-sm sm:text-base">User to User Transfer</h4>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="userId" className="text-sm">User ID</Label>
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                    <Input
-                      id="userId"
-                      value={transferUserId}
-                      onChange={(e) => setTransferUserId(e.target.value)}
-                      placeholder="Enter User ID"
-                      className="flex-1"
-                    />
-                    <Button onClick={handleVerifyUser} variant="outline" className="w-full sm:w-auto">
-                      Verify
-                    </Button>
-                  </div>
-                  {verifiedUser && (
-                    <p className="text-green-600 text-sm mt-1">✓ {verifiedUser}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="amount" className="text-sm">Amount</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    value={transferAmount}
-                    onChange={(e) => setTransferAmount(e.target.value)}
-                    placeholder="Enter amount"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Charges: 6% + 2% TDS</p>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <Button onClick={handleTransfer} disabled={!verifiedUser} className="w-full sm:w-auto">
-                  Transfer
-                </Button>
-                <Button onClick={() => setActiveAction(null)} variant="outline" className="w-full sm:w-auto">
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Top-up Form - Mobile Responsive */}
-          {activeAction === 'topup' && (
-            <div className="border-t pt-4 space-y-4">
-              <h4 className="font-semibold text-sm sm:text-base">
-                {topupOption === 'self' ? 'Transfer to Top-up Balance' : 'Transfer to Friend\'s Top-up Balance'}
-              </h4>
-
-              {topupOption === 'friend' && (
-                <div>
-                  <Label htmlFor="friendUserId" className="text-sm">Friend's User ID</Label>
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                    <Input
-                      id="friendUserId"
-                      value={friendUserId}
-                      onChange={(e) => setFriendUserId(e.target.value)}
-                      placeholder="Enter Friend's User ID"
-                      className="flex-1"
-                    />
-                    <Button onClick={handleVerifyFriend} variant="outline" className="w-full sm:w-auto">
-                      Verify
-                    </Button>
-                  </div>
-                  {verifiedFriend && (
-                    <p className="text-green-600 text-sm mt-1">✓ {verifiedFriend}</p>
-                  )}
-                </div>
-              )}
-
-              <div>
-                <Label htmlFor="topupAmount" className="text-sm">Amount</Label>
-                <Input
-                  id="topupAmount"
-                  type="number"
-                  value={topupAmount}
-                  onChange={(e) => setTopupAmount(e.target.value)}
-                  placeholder="Enter amount to transfer"
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <Button 
-                  onClick={handleTopup} 
-                  disabled={topupOption === 'friend' && !verifiedFriend}
-                  className="w-full sm:w-auto"
-                >
-                  Transfer
-                </Button>
-                <Button 
-                  onClick={() => {
-                    setActiveAction(null);
-                    setTopupAmount('');
-                    setFriendUserId('');
-                    setVerifiedFriend(null);
-                  }} 
-                  variant="outline" 
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Transaction History - Mobile Responsive */}
-        <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-4 sm:p-6">
-          <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Transaction History</h3>
-
-          <div className="overflow-x-auto">
-            <div className="min-w-[400px]">
-              <table className="w-full text-xs sm:text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2 sm:p-3">Type</th>
-                    <th className="text-left p-2 sm:p-3">Amount</th>
-                    <th className="text-left p-2 sm:p-3">Status</th>
-                    <th className="text-left p-2 sm:p-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((tx) => (
-                    <tr key={tx.id} className="border-b">
-                      <td className="p-2 sm:p-3">{tx.type}</td>
-                      <td className={`p-2 sm:p-3 ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ₹{Math.abs(tx.amount).toLocaleString()}
-                      </td>
-                      <td className="p-2 sm:p-3">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          tx.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {tx.status}
-                        </span>
-                      </td>
-                      <td className="p-2 sm:p-3">{tx.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Top-up Balance</span>
+              <CreditCard className="w-6 h-6" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">₹{walletData.topup_balance.toLocaleString()}</p>
+            <p className="text-green-100 text-sm">Shopping wallet</p>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Action Buttons */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Button onClick={() => window.location.hash = '#deposit'} className="h-20 flex-col space-y-2">
+          <ArrowDownLeft className="w-6 h-6" />
+          <span>Deposit</span>
+        </Button>
+        
+        <Button onClick={() => window.location.hash = '#withdraw'} variant="outline" className="h-20 flex-col space-y-2">
+          <ArrowUpRight className="w-6 h-6" />
+          <span>Withdraw</span>
+        </Button>
+        
+        <Button onClick={() => setActiveAction('topup')} variant="outline" className="h-20 flex-col space-y-2">
+          <RefreshCw className="w-6 h-6" />
+          <span>Top-up</span>
+        </Button>
+        
+        <Button onClick={() => setActiveAction('transfer')} variant="outline" className="h-20 flex-col space-y-2">
+          <Send className="w-6 h-6" />
+          <span>Transfer</span>
+        </Button>
+      </div>
+
+      {/* Action Forms */}
+      {activeAction === 'topup' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Transfer to Top-up Balance</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="topupAmount">Amount</Label>
+              <Input
+                id="topupAmount"
+                type="number"
+                value={topupAmount}
+                onChange={(e) => setTopupAmount(e.target.value)}
+                placeholder="Enter amount (min ₹100)"
+              />
+            </div>
+            <div className="flex space-x-2">
+              <Button onClick={handleTopup}>Transfer</Button>
+              <Button onClick={() => setActiveAction(null)} variant="outline">Cancel</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeAction === 'transfer' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Transfer to User</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="recipientUserId">Recipient User ID</Label>
+              <div className="flex space-x-2">
+                <Input
+                  id="recipientUserId"
+                  value={recipientUserId}
+                  onChange={(e) => setRecipientUserId(e.target.value)}
+                  placeholder="Enter User ID (e.g., AU00001)"
+                />
+                <Button onClick={verifyRecipient} variant="outline">Verify</Button>
+              </div>
+              {verifiedRecipient && (
+                <p className="text-green-600 text-sm mt-1">
+                  Verified: {verifiedRecipient.name}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label htmlFor="transferAmount">Amount</Label>
+              <Input
+                id="transferAmount"
+                type="number"
+                value={transferAmount}
+                onChange={(e) => setTransferAmount(e.target.value)}
+                placeholder="Enter amount"
+              />
+              {transferAmount && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Tax (8%): ₹{(parseFloat(transferAmount) * 0.08).toFixed(2)} | 
+                  Total Deduction: ₹{(parseFloat(transferAmount) * 1.08).toFixed(2)}
+                </p>
+              )}
+            </div>
+            <div className="flex space-x-2">
+              <Button onClick={handleTransfer} disabled={!verifiedRecipient}>Transfer</Button>
+              <Button onClick={() => {
+                setActiveAction(null);
+                setRecipientUserId('');
+                setVerifiedRecipient(null);
+                setTransferAmount('');
+              }} variant="outline">Cancel</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Transaction History */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaction History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {transactions.map((transaction) => (
+              <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <p className="font-medium capitalize">{transaction.type.replace('_', ' ')}</p>
+                  <p className="text-sm text-gray-600">{transaction.description}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(transaction.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className={`font-bold ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {transaction.amount >= 0 ? '+' : ''}₹{Math.abs(transaction.amount).toLocaleString()}
+                  </p>
+                  <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'}>
+                    {transaction.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
