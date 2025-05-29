@@ -1,21 +1,26 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import LoadingScreen from '@/components/LoadingScreen';
-import AdminLogin from '@/components/admin/AdminLogin';
+import AuthPage from '@/components/auth/AuthPage';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 
 const AdminPanel = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const { user, isAdmin } = useAuth();
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
+  const { user, isAdmin, loading } = useAuth();
 
-  // Simulate loading screen
-  setTimeout(() => {
-    setIsLoading(false);
-  }, 1500);
+  useEffect(() => {
+    // Show loading screen for 1.5 seconds
+    const timer = setTimeout(() => {
+      setShowLoadingScreen(false);
+    }, 1500);
 
-  if (isLoading) {
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show loading screen during initial load or auth loading
+  if (showLoadingScreen || loading) {
     return <LoadingScreen />;
   }
 
@@ -34,7 +39,9 @@ const AdminPanel = () => {
       </div>
       
       {!isAdmin ? (
-        <AdminLogin />
+        <div className="relative z-10">
+          <AuthPage />
+        </div>
       ) : (
         <AdminDashboard />
       )}

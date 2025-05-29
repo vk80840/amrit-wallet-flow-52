@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -50,7 +49,7 @@ const AuthPage = () => {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid credentials. Please try again.",
+          description: "Invalid credentials. Please check your email and password.",
           variant: "destructive",
         });
       }
@@ -77,6 +76,15 @@ const AuthPage = () => {
       return;
     }
 
+    if (signupData.password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -84,7 +92,13 @@ const AuthPage = () => {
       if (success) {
         toast({
           title: "Registration Successful",
-          description: "Welcome to AlkalineAmrit!",
+          description: "Welcome to AlkalineAmrit! Please check your email to verify your account.",
+        });
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: "Email already exists or invalid data. Please try again.",
+          variant: "destructive",
         });
       }
     } catch (error) {

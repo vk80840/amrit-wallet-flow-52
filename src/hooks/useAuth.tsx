@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
 interface User {
   id: string;
@@ -11,11 +13,14 @@ interface User {
   kycStatus: 'pending' | 'approved' | 'rejected';
   rank: string;
   referralCode: string;
+  userId: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
+  session: Session | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (userData: any) => Promise<boolean>;
@@ -25,100 +30,204 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem('alkaline_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        fetchUserProfile(session.user);
+      }
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      if (session?.user) {
+        await fetchUserProfile(session.user);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
+  const fetchUserProfile = async (authUser: SupabaseUser) => {
+    try {
+      // Check if this is an admin user (predefined admin emails)
+      const adminEmails = ['neeraj@alkalineamrit.com', 'vansh@alkalineamrit.com', 'deepanshu@alkalineamrit.com', 'admin@alkalineamrit.com'];
+      const isAdmin = adminEmails.includes(authUser.email || '');
+
+      if (isAdmin) {
+        // Create admin user object
+        const adminUser: User = {
+          id: authUser.id,
+          name: authUser.email?.split('@')[0]?.charAt(0).toUpperCase() + authUser.email?.split('@')[0]?.slice(1) || 'Admin',
+          email: authUser.email || '',
+          mobile: '+91-9999999999',
+          userType: 'admin',
+          kycStatus: 'approved',
+          rank: 'admin',
+          referralCode: `ADMIN_${authUser.email?.split('@')[0]?.toUpperCase()}`,
+          userId: `ADMIN_${authUser.email?.split('@')[0]?.toUpperCase()}`
+        };
+        setUser(adminUser);
+        return;
+      }
+
+      // Fetch regular user profile from database
+      const { data: userProfile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', authUser.email)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+
+      if (userProfile) {
+        const user: User = {
+          id: userProfile.id,
+          name: userProfile.name,
+          email: userProfile.email,
+          mobile: userProfile.mobile,
+          userType: 'user',
+          kycStatus: userProfile.kyc_status,
+          rank: userProfile.rank,
+          referralCode: userProfile.referral_code,
+          userId: userProfile.user_id
+        };
+        setUser(user);
+      }
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+    }
+  };
+
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Admin authentication for 3 admin accounts
-    const adminAccounts = ['neeraj', 'vansh', 'deepanshu'];
-    const adminPassword = 'DEepu1234@&';
-    
-    if (adminAccounts.includes(email.toLowerCase()) && password === adminPassword) {
-      const adminUser: User = {
-        id: `admin_${email.toLowerCase()}`,
-        name: email.charAt(0).toUpperCase() + email.slice(1),
-        email: `${email.toLowerCase()}@alkalineamrit.com`,
-        mobile: '+91-9999999999',
-        userType: 'admin',
-        kycStatus: 'approved',
-        rank: 'admin',
-        referralCode: `ADMIN_${email.toUpperCase()}`
-      };
-      setUser(adminUser);
-      localStorage.setItem('alkaline_user', JSON.stringify(adminUser));
-      return true;
-    }
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    // Legacy admin login for backward compatibility
-    if (email === 'admin@alkalineamrit.com' && password === 'DEepu1234@&') {
-      const adminUser: User = {
-        id: 'admin1',
-        name: 'Admin',
-        email: 'admin@alkalineamrit.com',
-        mobile: '+91-9999999999',
-        userType: 'admin',
-        kycStatus: 'approved',
-        rank: 'admin',
-        referralCode: 'ADMIN001'
-      };
-      setUser(adminUser);
-      localStorage.setItem('alkaline_user', JSON.stringify(adminUser));
-      return true;
-    }
+      if (error) {
+        console.error('Login error:', error.message);
+        return false;
+      }
 
-    // Mock user login
-    if (email && password) {
-      const mockUser: User = {
-        id: 'GB00001',
-        name: 'Test User',
-        email: email,
-        mobile: '+91-9876543210',
-        userType: 'user',
-        kycStatus: 'pending',
-        rank: 'Wood', // Default rank for new users
-        referralCode: 'TEST001'
-      };
-      setUser(mockUser);
-      localStorage.setItem('alkaline_user', JSON.stringify(mockUser));
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    } finally {
+      setLoading(false);
     }
-
-    return false;
   };
 
   const register = async (userData: any): Promise<boolean> => {
-    // Mock registration - replace with real API call
-    const newUser: User = {
-      id: `GB${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`,
-      name: userData.name,
-      email: userData.email,
-      mobile: userData.mobile,
-      userType: 'user',
-      kycStatus: 'pending',
-      rank: 'Wood',
-      referralCode: `REF${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('alkaline_user', JSON.stringify(newUser));
-    return true;
+    try {
+      setLoading(true);
+
+      // First create auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+      });
+
+      if (authError) {
+        console.error('Auth registration error:', authError.message);
+        return false;
+      }
+
+      if (authData.user) {
+        // Generate user ID (GB00001 format)
+        const { data: existingUsers } = await supabase
+          .from('users')
+          .select('user_id')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        let nextNumber = 1;
+        if (existingUsers && existingUsers.length > 0) {
+          const lastUserId = existingUsers[0].user_id;
+          const lastNumber = parseInt(lastUserId.substring(2));
+          nextNumber = lastNumber + 1;
+        }
+
+        const newUserId = `GB${String(nextNumber).padStart(5, '0')}`;
+
+        // Create user profile in database
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            user_id: newUserId,
+            email: userData.email,
+            password_hash: 'managed_by_supabase_auth', // Placeholder since Supabase handles this
+            name: userData.name,
+            mobile: userData.mobile,
+            referral_code: `REF${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`,
+            side: userData.side,
+            rank: 'Bronze',
+            kyc_status: 'pending'
+          });
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError.message);
+          return false;
+        }
+
+        // Create wallet for the user
+        await supabase
+          .from('wallets')
+          .insert({
+            user_id: authData.user.id,
+            main_balance: 0.00,
+            topup_balance: 0.00
+          });
+
+        // Create STK wallet for the user
+        await supabase
+          .from('stk_wallets')
+          .insert({
+            user_id: authData.user.id,
+            total_balance: 0,
+            locked_balance: 0,
+            unlocked_balance: 0
+          });
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('alkaline_user');
+    setSession(null);
   };
 
   return (
     <AuthContext.Provider value={{
       user,
       isAdmin: user?.userType === 'admin',
+      session,
+      loading,
       login,
       logout,
       register
