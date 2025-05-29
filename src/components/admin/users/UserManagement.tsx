@@ -1,40 +1,96 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Eye, Edit, Ban, RotateCcw, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { supabase } from '@/integrations/supabase/client';
+
+interface User {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  mobile: string;
+  created_at: string;
+  referral_code: string;
+  sponsor_id: string | null;
+  rank: string;
+  kyc_status: string;
+  is_active: boolean;
+}
 
 const UserManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const usersPerPage = 10;
 
-  // Mock data - will be from database
-  const users = Array.from({ length: 50 }, (_, i) => ({
-    id: `GB${String(i + 1).padStart(5, '0')}`,
-    name: `User ${i + 1}`,
-    email: `user${i + 1}@example.com`,
-    mobile: `+91-98765${String(i).padStart(5, '0')}`,
-    joinedDate: `2024-01-${String((i % 30) + 1).padStart(2, '0')}`,
-    referralCode: `REF${String(i + 1).padStart(5, '0')}`,
-    referralUpline: i > 0 ? `GB${String(Math.floor(i / 2) + 1).padStart(5, '0')}` : 'None',
-    walletBalance: Math.floor(Math.random() * 50000),
-    status: Math.random() > 0.1 ? 'Active' : 'Blocked'
-  }));
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching users:', error);
+        return;
+      }
+
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.id.toLowerCase().includes(searchTerm.toLowerCase())
+    user.user_id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const startIndex = (currentPage - 1) * usersPerPage;
   const currentUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
 
-  const handleAction = (action: string, userId: string) => {
+  const handleAction = async (action: string, userId: string) => {
     console.log(`${action} user:`, userId);
+    
+    if (action === 'block' || action === 'unblock') {
+      const isActive = action === 'unblock';
+      const { error } = await supabase
+        .from('users')
+        .update({ is_active: isActive })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error updating user status:', error);
+      } else {
+        fetchUsers(); // Refresh the list
+      }
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
+        </div>
+        <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
+          <div className="text-center">Loading users...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -76,8 +132,8 @@ const UserManagement = () => {
                 <th className="text-left p-3">Mobile</th>
                 <th className="text-left p-3">Joined Date</th>
                 <th className="text-left p-3">Referral Code</th>
-                <th className="text-left p-3">Upline</th>
-                <th className="text-left p-3">Wallet Balance</th>
+                <th className="text-left p-3">Rank</th>
+                <th className="text-left p-3">KYC Status</th>
                 <th className="text-left p-3">Status</th>
                 <th className="text-left p-3">Actions</th>
               </tr>
@@ -85,19 +141,27 @@ const UserManagement = () => {
             <tbody>
               {currentUsers.map((user) => (
                 <tr key={user.id} className="border-b hover:bg-gray-50">
-                  <td className="p-3 font-medium">{user.id}</td>
+                  <td className="p-3 font-medium">{user.user_id}</td>
                   <td className="p-3">{user.name}</td>
                   <td className="p-3">{user.email}</td>
                   <td className="p-3">{user.mobile}</td>
-                  <td className="p-3">{user.joinedDate}</td>
-                  <td className="p-3">{user.referralCode}</td>
-                  <td className="p-3">{user.referralUpline}</td>
-                  <td className="p-3">₹{user.walletBalance.toLocaleString()}</td>
+                  <td className="p-3">{new Date(user.created_at).toLocaleDateString()}</td>
+                  <td className="p-3">{user.referral_code}</td>
+                  <td className="p-3">{user.rank}</td>
                   <td className="p-3">
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      user.kyc_status === 'approved' ? 'bg-green-100 text-green-800' : 
+                      user.kyc_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                      'bg-yellow-100 text-yellow-800'
                     }`}>
-                      {user.status}
+                      {user.kyc_status}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {user.is_active ? 'Active' : 'Blocked'}
                     </span>
                   </td>
                   <td className="p-3">
@@ -119,9 +183,9 @@ const UserManagement = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleAction(user.status === 'Active' ? 'block' : 'unblock', user.id)}
+                        onClick={() => handleAction(user.is_active ? 'block' : 'unblock', user.id)}
                       >
-                        {user.status === 'Active' ? <Ban className="w-4 h-4" /> : <RotateCcw className="w-4 h-4" />}
+                        {user.is_active ? <Ban className="w-4 h-4" /> : <RotateCcw className="w-4 h-4" />}
                       </Button>
                       <Button
                         size="sm"
@@ -139,36 +203,44 @@ const UserManagement = () => {
           </table>
         </div>
 
+        {currentUsers.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            {searchTerm ? 'No users found matching your search.' : 'No users found.'}
+          </div>
+        )}
+
         {/* Pagination */}
-        <div className="flex items-center justify-between mt-6">
-          <div className="text-sm text-gray-600">
-            Showing {startIndex + 1} to {Math.min(startIndex + usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-gray-600">
+              Showing {startIndex + 1} to {Math.min(startIndex + usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
+            </div>
             
-            <span className="text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              
+              <span className="text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

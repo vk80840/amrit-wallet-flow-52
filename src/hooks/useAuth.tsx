@@ -153,7 +153,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       if (authData.user) {
-        // Generate user ID (GB00001 format)
+        // Generate user ID (AL0001 format)
         const { data: existingUsers } = await supabase
           .from('users')
           .select('user_id')
@@ -167,7 +167,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           nextNumber = lastNumber + 1;
         }
 
-        const newUserId = `GB${String(nextNumber).padStart(5, '0')}`;
+        const newUserId = `AL${String(nextNumber).padStart(4, '0')}`;
 
         // Create user profile in database
         const { error: profileError } = await supabase
@@ -179,7 +179,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             password_hash: 'managed_by_supabase_auth', // Placeholder since Supabase handles this
             name: userData.name,
             mobile: userData.mobile,
-            referral_code: `REF${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`,
+            referral_code: `REF${String(Math.floor(Math.random() * 9999) + 1).padStart(4, '0')}`,
             side: userData.side,
             rank: 'Bronze',
             kyc_status: 'pending'
