@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import AdminSidebar from './AdminSidebar';
@@ -14,6 +15,7 @@ import AnnouncementManagement from './announcements/AnnouncementManagement';
 import ActivityLogs from './activity/ActivityLogs';
 import SystemSettings from './settings/SystemSettings';
 import STKManagement from './stk/STKManagement';
+import WalletAdjustment from './wallet/WalletAdjustment';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');

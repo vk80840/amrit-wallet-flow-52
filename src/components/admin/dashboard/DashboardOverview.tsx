@@ -1,31 +1,134 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Users, DollarSign, FileText, Download, UserCheck, UserPlus, ShoppingCart, Coins, Bell, TrendingUp, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 const DashboardOverview = () => {
   const [dateRange, setDateRange] = useState('today');
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalEarnings: 0,
+    pendingKYC: 0,
+    pendingWithdrawals: 0,
+    activeUsersToday: 0,
+    newSignupsToday: 0,
+    totalOrders: 0,
+    totalSTKBalance: 0,
+    adminSTKBalance: 0
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - will be from database
-  const stats = {
-    totalUsers: 15847,
-    totalEarnings: 2847650,
-    pendingKYC: 23,
-    pendingWithdrawals: 7,
-    activeUsersToday: 1247,
-    newSignupsToday: 45,
-    totalOrders: 3892,
-    totalSTKBalance: 875000,
-    adminSTKBalance: 125000
+  useEffect(() => {
+    fetchDashboardData();
+  }, [dateRange]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch total users
+      const { count: totalUsers } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch pending KYC
+      const { count: pendingKYC } = await supabase
+        .from('kyc_documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
+      // Fetch pending withdrawals
+      const { count: pendingWithdrawals } = await supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('type', 'withdrawal')
+        .eq('status', 'pending');
+
+      // Fetch total orders
+      const { count: totalOrders } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch new signups today
+      const today = new Date().toISOString().split('T')[0];
+      const { count: newSignupsToday } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', today);
+
+      // Fetch total earnings from completed transactions
+      const { data: earningsData } = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('status', 'completed')
+        .in('type', ['commission', 'purchase']);
+
+      const totalEarnings = earningsData?.reduce((sum, t) => sum + parseFloat(t.amount), 0) || 0;
+
+      // Fetch total STK balance
+      const { data: stkData } = await supabase
+        .from('stk_wallets')
+        .select('total_balance');
+
+      const totalSTKBalance = stkData?.reduce((sum, w) => sum + w.total_balance, 0) || 0;
+
+      setStats({
+        totalUsers: totalUsers || 0,
+        totalEarnings,
+        pendingKYC: pendingKYC || 0,
+        pendingWithdrawals: pendingWithdrawals || 0,
+        activeUsersToday: totalUsers || 0, // For now, assume all users are active
+        newSignupsToday: newSignupsToday || 0,
+        totalOrders: totalOrders || 0,
+        totalSTKBalance,
+        adminSTKBalance: 0 // Will be calculated based on admin logic
+      });
+
+      // Fetch recent activity (recent transactions)
+      const { data: activityData } = await supabase
+        .from('transactions')
+        .select(`
+          id,
+          type,
+          amount,
+          created_at,
+          users:user_id (name, user_id)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      const formattedActivity = activityData?.map(transaction => ({
+        id: transaction.id,
+        action: transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1),
+        user: `${transaction.users?.name} (${transaction.users?.user_id})`,
+        time: new Date(transaction.created_at).toLocaleString(),
+        severity: transaction.type === 'withdrawal' ? 'high' : 
+                  transaction.type === 'deposit' ? 'medium' : 'low'
+      })) || [];
+
+      setRecentActivity(formattedActivity);
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const recentActivity = [
-    { id: 1, action: 'User Login', user: 'John Doe (GB00015)', time: '2 minutes ago', severity: 'low' },
-    { id: 2, action: 'KYC Submitted', user: 'Jane Smith (GB00016)', time: '5 minutes ago', severity: 'medium' },
-    { id: 3, action: 'Withdrawal Request', user: 'Bob Wilson (GB00017)', time: '8 minutes ago', severity: 'high' },
-    { id: 4, action: 'Order Placed', user: 'Alice Brown (GB00018)', time: '12 minutes ago', severity: 'low' },
-    { id: 5, action: 'STK Purchase', user: 'Charlie Davis (GB00019)', time: '15 minutes ago', severity: 'medium' }
-  ];
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="bg-gray-200 animate-pulse rounded-xl h-32"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -155,29 +258,33 @@ const DashboardOverview = () => {
       <div className="bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl rounded-xl p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
         <div className="space-y-3">
-          {recentActivity.map((activity) => (
-            <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Activity className={`w-5 h-5 ${
-                  activity.severity === 'high' ? 'text-red-500' :
-                  activity.severity === 'medium' ? 'text-yellow-500' : 'text-green-500'
-                }`} />
-                <div>
-                  <p className="font-medium text-gray-800">{activity.action}</p>
-                  <p className="text-sm text-gray-600">{activity.user}</p>
+          {recentActivity.length > 0 ? (
+            recentActivity.map((activity) => (
+              <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Activity className={`w-5 h-5 ${
+                    activity.severity === 'high' ? 'text-red-500' :
+                    activity.severity === 'medium' ? 'text-yellow-500' : 'text-green-500'
+                  }`} />
+                  <div>
+                    <p className="font-medium text-gray-800">{activity.action}</p>
+                    <p className="text-sm text-gray-600">{activity.user}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    activity.severity === 'high' ? 'bg-red-100 text-red-600' :
+                    activity.severity === 'medium' ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600'
+                  }`}>
+                    {activity.severity}
+                  </span>
+                  <span className="text-xs text-gray-500">{activity.time}</span>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  activity.severity === 'high' ? 'bg-red-100 text-red-600' :
-                  activity.severity === 'medium' ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600'
-                }`}>
-                  {activity.severity}
-                </span>
-                <span className="text-xs text-gray-500">{activity.time}</span>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-gray-500 text-center py-4">No recent activity</p>
+          )}
         </div>
       </div>
     </div>

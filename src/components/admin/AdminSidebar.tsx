@@ -1,3 +1,4 @@
+
 import { X, LayoutDashboard, Users, FileCheck, Download, Upload, Package, ShoppingCart, TreePine, Bell, Wallet, Activity, Settings, Coins } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -21,6 +22,8 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }: 
     { id: 'orders', label: 'Orders', icon: ShoppingCart },
     { id: 'team-tree', label: 'Team Tree', icon: TreePine },
     { id: 'announcements', label: 'Announcements', icon: Bell },
+    { id: 'wallet-adjustment', label: 'Wallet Adjustment', icon: Wallet },
+    { id: 'stk', label: 'STK Management', icon: Coins },
     { id: 'activity-logs', label: 'Activity Logs', icon: Activity },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];

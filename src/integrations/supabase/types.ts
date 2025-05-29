@@ -193,6 +193,7 @@ export type Database = {
           bv_credited: number
           created_at: string | null
           id: string
+          order_id: string
           product_id: string | null
           quantity: number | null
           status: string | null
@@ -204,6 +205,7 @@ export type Database = {
           bv_credited: number
           created_at?: string | null
           id?: string
+          order_id: string
           product_id?: string | null
           quantity?: number | null
           status?: string | null
@@ -215,6 +217,7 @@ export type Database = {
           bv_credited?: number
           created_at?: string | null
           id?: string
+          order_id?: string
           product_id?: string | null
           quantity?: number | null
           status?: string | null
@@ -569,6 +572,7 @@ export type Database = {
           mobile: string
           name: string
           password_hash: string
+          rank: string | null
           referral_code: string
           side: string | null
           sponsor_id: string | null
@@ -584,6 +588,7 @@ export type Database = {
           mobile: string
           name: string
           password_hash: string
+          rank?: string | null
           referral_code: string
           side?: string | null
           sponsor_id?: string | null
@@ -599,6 +604,7 @@ export type Database = {
           mobile?: string
           name?: string
           password_hash?: string
+          rank?: string | null
           referral_code?: string
           side?: string | null
           sponsor_id?: string | null

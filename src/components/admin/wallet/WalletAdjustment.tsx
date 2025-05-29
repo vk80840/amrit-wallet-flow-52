@@ -1,9 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Edit, Plus, Minus, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { supabase } from '@/integrations/supabase/client';
 
 const WalletAdjustment = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -11,95 +12,153 @@ const WalletAdjustment = () => {
   const [adjustmentType, setAdjustmentType] = useState('');
   const [amount, setAmount] = useState('');
   const [remark, setRemark] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [adjustmentHistory, setAdjustmentHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Mock data - will be from database
-  const searchResults = [
-    {
-      id: 'GB00001',
-      name: 'John Doe',
-      email: 'john@example.com',
-      mobile: '+91-9876543210',
-      mainWallet: 12500,
-      stkWallet: 850,
-      totalBV: 5000
-    },
-    {
-      id: 'GB00002',
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      mobile: '+91-9876543211',
-      mainWallet: 8750,
-      stkWallet: 1200,
-      totalBV: 3500
+  useEffect(() => {
+    fetchAdjustmentHistory();
+  }, []);
+
+  const fetchAdjustmentHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select(`
+          id,
+          amount,
+          type,
+          description,
+          created_at,
+          users:user_id (name, user_id)
+        `)
+        .in('type', ['wallet_adjustment', 'stk_adjustment', 'bv_adjustment'])
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      const formattedHistory = data?.map((transaction, index) => ({
+        id: transaction.id,
+        timestamp: new Date(transaction.created_at).toLocaleString(),
+        admin: 'Admin', // In real app, get from auth context
+        userId: transaction.users?.user_id || 'Unknown',
+        userName: transaction.users?.name || 'Unknown User',
+        type: transaction.type === 'wallet_adjustment' ? 'Main Wallet' : 
+              transaction.type === 'stk_adjustment' ? 'STK Wallet' : 'Business Volume',
+        action: parseFloat(transaction.amount) > 0 ? 'Credit' : 'Debit',
+        amount: Math.abs(parseFloat(transaction.amount)),
+        previousBalance: 0, // Would need additional logic to calculate
+        newBalance: 0, // Would need additional logic to calculate
+        remark: transaction.description || 'No remark'
+      })) || [];
+
+      setAdjustmentHistory(formattedHistory);
+    } catch (error) {
+      console.error('Error fetching adjustment history:', error);
     }
-  ];
-
-  const adjustmentHistory = [
-    {
-      id: 1,
-      timestamp: '2024-01-25 14:30:25',
-      admin: 'Neeraj',
-      userId: 'GB00001',
-      userName: 'John Doe',
-      type: 'Main Wallet',
-      action: 'Credit',
-      amount: 5000,
-      previousBalance: 7500,
-      newBalance: 12500,
-      remark: 'Compensation for technical issue'
-    },
-    {
-      id: 2,
-      timestamp: '2024-01-25 14:25:10',
-      admin: 'Vansh',
-      userId: 'GB00002',
-      userName: 'Jane Smith',
-      type: 'STK Wallet',
-      action: 'Credit',
-      amount: 200,
-      previousBalance: 1000,
-      newBalance: 1200,
-      remark: 'Bonus STK reward'
-    },
-    {
-      id: 3,
-      timestamp: '2024-01-25 14:20:45',
-      admin: 'Deepanshu',
-      userId: 'GB00003',
-      userName: 'Bob Wilson',
-      type: 'Main Wallet',
-      action: 'Debit',
-      amount: 1000,
-      previousBalance: 6000,
-      newBalance: 5000,
-      remark: 'Correction for duplicate credit'
-    }
-  ];
-
-  const handleSearch = () => {
-    console.log('Searching for user:', searchTerm);
-    // In real implementation, this would search the database
   };
 
-  const handleAdjustment = (e) => {
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('users')
+        .select(`
+          id,
+          user_id,
+          name,
+          email,
+          mobile,
+          wallets (main_balance, topup_balance),
+          stk_wallets (total_balance),
+          business_volume (amount)
+        `)
+        .or(`user_id.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`);
+
+      if (error) throw error;
+
+      const formattedResults = data?.map(user => ({
+        id: user.id,
+        user_id: user.user_id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        mainWallet: user.wallets?.[0]?.main_balance || 0,
+        stkWallet: user.stk_wallets?.[0]?.total_balance || 0,
+        totalBV: user.business_volume?.reduce((sum, bv) => sum + bv.amount, 0) || 0
+      })) || [];
+
+      setSearchResults(formattedResults);
+    } catch (error) {
+      console.error('Error searching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdjustment = async (e) => {
     e.preventDefault();
     if (!selectedUser || !adjustmentType || !amount || !remark) {
       alert('Please fill all required fields');
       return;
     }
-    
-    console.log('Making adjustment:', {
-      user: selectedUser.id,
-      type: adjustmentType,
-      amount: parseFloat(amount),
-      remark
-    });
-    
-    // Reset form
-    setAdjustmentType('');
-    setAmount('');
-    setRemark('');
-    alert('Wallet adjustment completed successfully');
+
+    try {
+      setLoading(true);
+      
+      // Create transaction record
+      const { error: transactionError } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: selectedUser.id,
+          type: `${adjustmentType}_adjustment`,
+          amount: parseFloat(amount),
+          description: remark,
+          status: 'completed'
+        });
+
+      if (transactionError) throw transactionError;
+
+      // Update the respective wallet/balance
+      if (adjustmentType === 'mainWallet') {
+        const { error: walletError } = await supabase
+          .from('wallets')
+          .upsert({
+            user_id: selectedUser.id,
+            main_balance: selectedUser.mainWallet + parseFloat(amount)
+          });
+        if (walletError) throw walletError;
+      } else if (adjustmentType === 'stkWallet') {
+        const { error: stkError } = await supabase
+          .from('stk_wallets')
+          .upsert({
+            user_id: selectedUser.id,
+            total_balance: selectedUser.stkWallet + parseInt(amount)
+          });
+        if (stkError) throw stkError;
+      }
+
+      // Reset form
+      setAdjustmentType('');
+      setAmount('');
+      setRemark('');
+      setSelectedUser(null);
+      setSearchTerm('');
+      setSearchResults([]);
+      
+      // Refresh history
+      fetchAdjustmentHistory();
+      
+      alert('Wallet adjustment completed successfully');
+    } catch (error) {
+      console.error('Error making adjustment:', error);
+      alert('Error making adjustment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -114,19 +173,19 @@ const WalletAdjustment = () => {
           <div className="flex-1">
             <Input
               type="text"
-              placeholder="Enter User ID or Email"
+              placeholder="Enter User ID, Email, or Name"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button onClick={handleSearch}>
+          <Button onClick={handleSearch} disabled={loading}>
             <Search className="w-4 h-4 mr-2" />
             Search
           </Button>
         </div>
 
         {/* Search Results */}
-        {searchTerm && (
+        {searchResults.length > 0 && (
           <div className="mt-4 space-y-2">
             {searchResults.map((user) => (
               <div
@@ -139,11 +198,11 @@ const WalletAdjustment = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <h4 className="font-semibold">{user.name}</h4>
-                    <p className="text-sm text-gray-600">ID: {user.id} | Email: {user.email}</p>
+                    <p className="text-sm text-gray-600">ID: {user.user_id} | Email: {user.email}</p>
                     <p className="text-sm text-gray-600">Mobile: {user.mobile}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm">Main: ₹{user.mainWallet.toLocaleString()}</p>
+                    <p className="text-sm">Main: ₹{parseFloat(user.mainWallet).toLocaleString()}</p>
                     <p className="text-sm">STK: {user.stkWallet.toLocaleString()}</p>
                     <p className="text-sm">BV: {user.totalBV.toLocaleString()}</p>
                   </div>
@@ -163,7 +222,7 @@ const WalletAdjustment = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-green-50 p-4 rounded-lg">
               <h4 className="font-semibold text-green-800">Main Wallet</h4>
-              <p className="text-2xl font-bold text-green-600">₹{selectedUser.mainWallet.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-green-600">₹{parseFloat(selectedUser.mainWallet).toLocaleString()}</p>
             </div>
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="font-semibold text-blue-800">STK Wallet</h4>
@@ -234,7 +293,7 @@ const WalletAdjustment = () => {
             </div>
             
             <div className="flex space-x-2">
-              <Button type="submit" className="bg-green-600 hover:bg-green-700">
+              <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={loading}>
                 <Edit className="w-4 h-4 mr-2" />
                 Apply Adjustment
               </Button>
@@ -260,45 +319,45 @@ const WalletAdjustment = () => {
                 <th className="text-left p-3">Wallet Type</th>
                 <th className="text-left p-3">Action</th>
                 <th className="text-left p-3">Amount</th>
-                <th className="text-left p-3">Previous</th>
-                <th className="text-left p-3">New Balance</th>
                 <th className="text-left p-3">Remark</th>
               </tr>
             </thead>
             <tbody>
-              {adjustmentHistory.map((adjustment) => (
-                <tr key={adjustment.id} className="border-b hover:bg-gray-50">
-                  <td className="p-3 font-mono text-xs">{adjustment.timestamp}</td>
-                  <td className="p-3 font-medium">{adjustment.admin}</td>
-                  <td className="p-3">
-                    <div>
-                      <p className="font-medium">{adjustment.userName}</p>
-                      <p className="text-xs text-gray-600">{adjustment.userId}</p>
-                    </div>
-                  </td>
-                  <td className="p-3">{adjustment.type}</td>
-                  <td className="p-3">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      adjustment.action === 'Credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {adjustment.action}
-                    </span>
-                  </td>
-                  <td className="p-3 font-bold">
-                    {adjustment.action === 'Credit' ? '+' : '-'}
-                    {adjustment.type.includes('STK') ? adjustment.amount.toLocaleString() : `₹${adjustment.amount.toLocaleString()}`}
-                  </td>
-                  <td className="p-3">
-                    {adjustment.type.includes('STK') ? adjustment.previousBalance.toLocaleString() : `₹${adjustment.previousBalance.toLocaleString()}`}
-                  </td>
-                  <td className="p-3 font-bold">
-                    {adjustment.type.includes('STK') ? adjustment.newBalance.toLocaleString() : `₹${adjustment.newBalance.toLocaleString()}`}
-                  </td>
-                  <td className="p-3 max-w-xs truncate" title={adjustment.remark}>
-                    {adjustment.remark}
+              {adjustmentHistory.length > 0 ? (
+                adjustmentHistory.map((adjustment) => (
+                  <tr key={adjustment.id} className="border-b hover:bg-gray-50">
+                    <td className="p-3 font-mono text-xs">{adjustment.timestamp}</td>
+                    <td className="p-3 font-medium">{adjustment.admin}</td>
+                    <td className="p-3">
+                      <div>
+                        <p className="font-medium">{adjustment.userName}</p>
+                        <p className="text-xs text-gray-600">{adjustment.userId}</p>
+                      </div>
+                    </td>
+                    <td className="p-3">{adjustment.type}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        adjustment.action === 'Credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {adjustment.action}
+                      </span>
+                    </td>
+                    <td className="p-3 font-bold">
+                      {adjustment.action === 'Credit' ? '+' : '-'}
+                      {adjustment.type.includes('STK') ? adjustment.amount.toLocaleString() : `₹${adjustment.amount.toLocaleString()}`}
+                    </td>
+                    <td className="p-3 max-w-xs truncate" title={adjustment.remark}>
+                      {adjustment.remark}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="text-center py-8 text-gray-500">
+                    No adjustment history found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
