@@ -11,10 +11,10 @@ const AdminPanel = () => {
   const { user, isAdmin, loading } = useAuth();
 
   useEffect(() => {
-    // Show loading screen for 1.5 seconds
+    // Show loading screen for 1 second
     const timer = setTimeout(() => {
       setShowLoadingScreen(false);
-    }, 1500);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);

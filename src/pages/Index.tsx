@@ -10,10 +10,10 @@ const Index = () => {
   const { user, isAdmin, loading } = useAuth();
 
   useEffect(() => {
-    // Show loading screen for 2 seconds
+    // Show loading screen for 1 second
     const timer = setTimeout(() => {
       setShowLoadingScreen(false);
-    }, 2000);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
